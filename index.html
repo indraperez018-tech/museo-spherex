@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<title>Planet X con SPHEREx - Museo del cielo en movimiento</title>
+<style>
+  :root { --fondo:#000; --texto:#e8e8e8; --suave:#9aa3ad; --acento:#8fb8ff; --linea:#22262c; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; background:var(--fondo); color:var(--texto);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  a { color:var(--acento); }
+  header { position:fixed; top:0; left:0; right:0; z-index:20; display:flex; align-items:center;
+    justify-content:space-between; padding:12px 20px; background:rgba(0,0,0,.75);
+    border-bottom:1px solid var(--linea); }
+  header .marca { font-weight:600; letter-spacing:.5px; }
+  nav button { background:none; border:1px solid transparent; color:var(--suave); font-size:15px;
+    padding:6px 12px; cursor:pointer; border-radius:4px; }
+  nav button.activo, nav button:hover { color:var(--texto); border-color:var(--linea); }
+  nav select { background:#000; color:var(--texto); border:1px solid var(--linea); border-radius:4px;
+    padding:6px 8px; font-size:14px; margin-inline-start:6px; }
+  .idiomas-inicio { position:relative; display:inline-block; margin-bottom:36px; }
+  #btn-idioma { background:none; color:var(--suave); border:1px solid var(--linea); border-radius:4px;
+    padding:8px 16px; font-size:15px; cursor:pointer; }
+  #btn-idioma:hover { color:var(--texto); border-color:#555; }
+  #botones-idioma { display:none; position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%);
+    z-index:15; min-width:200px; background:#050505; border:1px solid var(--linea); border-radius:4px; padding:6px 0; }
+  #botones-idioma.abierto { display:block; }
+  #botones-idioma button { display:block; width:100%; background:none; border:none; color:var(--suave);
+    padding:8px 16px; font-size:15px; cursor:pointer; text-align:center; }
+  #botones-idioma button:hover { color:var(--texto); background:#111; }
+  #botones-idioma button.on { color:var(--acento); }
+  .aviso-idioma { color:var(--suave); font-size:13px; border:1px dashed var(--linea); padding:6px 10px;
+    border-radius:4px; display:inline-block; margin-bottom:14px; }
+  .vista { display:none; min-height:100%; padding-top:58px; }
+  .vista.activa { display:block; }
+
+  /* Entrada */
+  #entrada { display:none; align-items:center; justify-content:center; text-align:center; }
+  #entrada.activa { display:flex; }
+  #entrada h1 { font-size:clamp(32px,6vw,64px); margin:0 0 12px; font-weight:600; }
+  #entrada p { color:var(--suave); max-width:640px; margin:0 auto 32px; font-size:18px; line-height:1.6; }
+  .botones { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .btn { background:none; color:var(--texto); border:1px solid #555; padding:12px 22px; font-size:16px;
+    cursor:pointer; border-radius:4px; text-decoration:none; display:inline-block; }
+  .btn:hover { border-color:var(--texto); }
+  .btn.principal { border-color:var(--acento); color:var(--acento); }
+
+  /* Planetario */
+  #planetario { padding-top:0; }
+  #aladin { position:fixed; top:58px; left:0; right:0; bottom:0; }
+  #panel-planetario { position:fixed; left:20px; bottom:20px; z-index:10; max-width:380px;
+    background:rgba(0,0,0,.8); border:1px solid var(--linea); padding:16px; border-radius:6px; }
+  #panel-planetario h2 { margin:0 0 6px; font-size:18px; }
+  #panel-planetario p { margin:0 0 12px; color:var(--suave); font-size:14px; line-height:1.5; }
+  #ficha { display:none; position:fixed; right:20px; bottom:20px; z-index:10; max-width:320px;
+    background:rgba(0,0,0,.85); border:1px solid var(--acento); padding:16px; border-radius:6px; }
+
+  /* Museo */
+  #museo .sala { max-width:1100px; margin:0 auto; padding:32px 20px 60px; }
+  .sala-num { color:var(--suave); font-size:13px; letter-spacing:2px; text-transform:uppercase; }
+  .sala h2 { font-size:clamp(26px,4vw,40px); margin:6px 0 20px; font-weight:600; }
+  .rejilla { display:grid; grid-template-columns: 1.1fr 1fr; gap:32px; align-items:start; }
+  @media (max-width: 820px) { .rejilla { grid-template-columns: 1fr; } }
+  .guia { border-left:2px solid var(--acento); padding:4px 0 4px 18px; }
+  .guia .quien { color:var(--acento); font-size:13px; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+  .guia p { font-size:18px; line-height:1.7; margin:0 0 14px; }
+  .datos { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:22px 0; }
+  .dato { border:1px solid var(--linea); padding:12px; border-radius:4px; }
+  .dato b { display:block; font-size:18px; margin-bottom:4px; }
+  .dato span { color:var(--suave); font-size:13px; }
+  .video { border:1px solid var(--linea); background:#050505; border-radius:4px; padding:10px; text-align:center; }
+  .video img { width:100%; image-rendering:pixelated; display:block; }
+  .video .pie { color:var(--suave); font-size:13px; margin-top:8px; line-height:1.5; text-align:left; }
+  .sin-video { color:var(--suave); padding:60px 16px; font-size:14px; }
+  .fuentes { margin-top:26px; font-size:13px; color:var(--suave); line-height:1.7; }
+  .fuentes a { color:var(--suave); }
+  .navsala { display:flex; justify-content:space-between; align-items:center; gap:12px;
+    max-width:1100px; margin:0 auto; padding:0 20px 40px; }
+  .puntos { display:flex; gap:8px; }
+  .puntos i { width:8px; height:8px; border-radius:50%; background:#333; display:block; cursor:pointer; }
+  .puntos i.on { background:var(--acento); }
+  .acciones { display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
+  .acciones .btn { padding:8px 14px; font-size:14px; }
+  .equipo { color:var(--suave); font-size:13px; margin-top:40px; border-top:1px solid var(--linea); padding-top:16px; }
+
+  /* ---- Afinado visual ---- */
+  body { background: radial-gradient(ellipse at 50% 120%, #0b1830 0%, #03060c 45%, #000 75%); background-attachment: fixed; }
+  #estrellas { position:fixed; inset:0; z-index:0; pointer-events:none; }
+  .vista { position:relative; z-index:2; }
+  header { position:fixed; z-index:20; background:rgba(3,6,12,.55); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(143,184,255,.12); }
+  header .marca { letter-spacing:1.5px; font-weight:500; }
+  .vidrio, .dato, .video, #panel-planetario, #ficha, #botones-idioma {
+    background:rgba(10,16,28,.55); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(143,184,255,.16); border-radius:12px; }
+  #panel-planetario, #ficha { position:fixed; z-index:10; }
+  .dato { padding:14px; transition:border-color .2s; }
+  .dato:hover { border-color:rgba(143,184,255,.4); }
+  .dato b { font-weight:500; letter-spacing:.3px; }
+  .btn, nav button, #btn-idioma, nav select { border-radius:999px; transition:all .2s ease; }
+  .btn { border-color:rgba(255,255,255,.25); padding:11px 24px; }
+  .btn:hover { border-color:var(--acento); box-shadow:0 0 18px rgba(143,184,255,.25); }
+  .btn.principal { background:rgba(143,184,255,.08); }
+  #entrada h1 { font-weight:300; letter-spacing:2px; text-shadow:0 0 30px rgba(143,184,255,.25); }
+  .sala h2 { font-weight:300; letter-spacing:1px; }
+  .guia { border-left-color:rgba(143,184,255,.6); }
+  .guia p { font-weight:300; }
+  .puntos i { transition:all .2s; }
+  .puntos i.on { box-shadow:0 0 8px var(--acento); }
+  #sala.aparecer { animation:aparecer .5s ease; }
+  @keyframes aparecer { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce) { #sala.aparecer { animation:none; } }
+
+  /* ---- Inicio en pixel art ---- */
+  #entrada { position:relative; overflow:hidden; }
+  #pixel { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; image-rendering:pixelated; image-rendering:crisp-edges; z-index:0; }
+  #entrada > div { position:absolute; z-index:1; inset:58px 0 0 0; display:flex; flex-direction:column;
+    align-items:center; padding:3vh 20px 4vh; text-align:center; }
+  #entrada > div > p { margin-top:auto; margin-bottom:14px; max-width:600px; font-size:14px; line-height:1.5; padding:10px 14px !important; }
+  #entrada h1 { margin-top:6px; }
+  #entrada h1 { font-family:'Press Start 2P', system-ui, sans-serif; font-weight:400; letter-spacing:1px;
+    font-size:clamp(20px,3.6vw,42px); line-height:1.4; color:#fff; text-shadow:4px 4px 0 #1a1c2c, 0 0 24px rgba(143,184,255,.35); }
+  #entrada p { background:rgba(5,6,15,.72); border:3px solid #1a1c2c; box-shadow:0 0 0 2px #3b4a6b;
+    padding:14px 18px; border-radius:0; color:#d8dde8; }
+  #entrada .btn { font-family:'Press Start 2P', system-ui, sans-serif; font-size:12px; line-height:1.6; border-radius:0;
+    border:3px solid #1a1c2c; box-shadow:0 0 0 2px #f2b33d, 4px 4px 0 2px #1a1c2c; background:#f7a823; color:#1a1c2c; padding:14px 18px; }
+  #entrada .btn:hover { transform:translate(-1px,-1px); box-shadow:0 0 0 2px #ffd47a, 6px 6px 0 2px #1a1c2c; }
+  #entrada .btn:not(.principal) { background:#2b3550; color:#fff; box-shadow:0 0 0 2px #6b7fb0, 4px 4px 0 2px #1a1c2c; }
+  #entrada #btn-idioma { border-radius:0; border:2px solid #3b4a6b; background:rgba(5,6,15,.72); color:#d8dde8; }
+  #entrada #botones-idioma { border-radius:0; }
+
+  /* ---- Estilo caricatura 2D (colores planos, contornos oscuros, formas redondas) ---- */
+  :root { --tinta:#231c3d; --lila:#c9c1e3; --lila-claro:#f1edfb; --amarillo:#ffcf4a; --naranja:#ffb547;
+    --azul:#4aa3e8; --verde:#7ccf6a; --acento:#ffcf4a; --suave:#d3cbef; --texto:#ffffff; }
+  html, body { font-family:'Nunito', system-ui, -apple-system, "Segoe UI", Arial, sans-serif; }
+  body { background:linear-gradient(180deg, #120d30 0%, #241b58 60%, #3a2c78 100%); background-attachment:fixed; }
+  h1, h2, .sala-num, .guia .quien, .btn, nav button, #btn-idioma, header .marca, .dato b {
+    font-family:'Fredoka', 'Nunito', system-ui, sans-serif; }
+  header { background:#1a1440; border-bottom:3px solid var(--tinta); box-shadow:0 3px 0 #3a2c78; backdrop-filter:none; }
+  header .marca { font-weight:600; font-size:18px; color:var(--amarillo); letter-spacing:.5px; }
+  nav button { color:var(--suave); font-weight:600; border:3px solid transparent; border-radius:999px; }
+  nav button.activo, nav button:hover { color:var(--tinta); background:var(--amarillo); border-color:var(--tinta); }
+  nav select { background:var(--lila-claro); color:var(--tinta); border:3px solid var(--tinta); border-radius:999px; font-weight:600; }
+  /* tarjetas claras con contorno grueso y "sombra de calcomania" */
+  .vidrio, .dato, .video, #panel-planetario, #ficha, #botones-idioma, #entrada p {
+    background:var(--lila-claro); color:var(--tinta); border:3px solid var(--tinta); border-radius:18px;
+    box-shadow:0 5px 0 var(--tinta); backdrop-filter:none; -webkit-backdrop-filter:none; }
+  #panel-planetario h2, #ficha b { color:var(--tinta); font-family:'Fredoka', sans-serif; }
+  #panel-planetario p, #ficha p, .video .pie, .dato span, .sin-video { color:#4b4275 !important; }
+  .dato b { color:var(--tinta); font-weight:600; }
+  .dato:hover { border-color:var(--tinta); transform:translateY(-2px); }
+  .dato { transition:transform .15s; }
+  .btn, #entrada .btn { font-family:'Fredoka', sans-serif; font-weight:600; font-size:16px; letter-spacing:.3px; line-height:1.2;
+    background:var(--lila); color:var(--tinta); border:3px solid var(--tinta); border-radius:999px;
+    box-shadow:0 5px 0 var(--tinta); padding:12px 24px; transition:transform .12s, box-shadow .12s; }
+  .btn.principal, #entrada .btn.principal { background:var(--amarillo); color:var(--tinta); }
+  .btn:hover, #entrada .btn:hover { transform:translateY(-2px); box-shadow:0 7px 0 var(--tinta); border-color:var(--tinta); }
+  .btn:active, #entrada .btn:active { transform:translateY(3px); box-shadow:0 2px 0 var(--tinta); }
+  #entrada .btn:not(.principal) { background:var(--lila); color:var(--tinta); box-shadow:0 5px 0 var(--tinta); }
+  #btn-idioma, #entrada #btn-idioma { background:var(--lila-claro); color:var(--tinta); border:3px solid var(--tinta);
+    border-radius:999px; font-weight:600; box-shadow:0 4px 0 var(--tinta); }
+  #botones-idioma, #entrada #botones-idioma { border-radius:16px; }
+  #botones-idioma button { color:var(--tinta); font-weight:600; }
+  #botones-idioma button:hover { background:var(--amarillo); color:var(--tinta); }
+  #botones-idioma button.on { color:#7a4fd0; }
+  #entrada h1 { font-family:'Fredoka', sans-serif; font-weight:700; font-size:clamp(34px,6vw,68px); line-height:1.1; letter-spacing:1px;
+    color:#fff; -webkit-text-stroke:3px var(--tinta); paint-order:stroke fill; text-shadow:0 6px 0 var(--tinta); }
+  #entrada p { padding:12px 18px !important; font-weight:600; }
+  .sala-num { color:var(--amarillo); font-weight:600; }
+  .sala h2 { font-weight:600; color:#fff; -webkit-text-stroke:2px var(--tinta); paint-order:stroke fill; text-shadow:0 4px 0 var(--tinta); }
+  .guia { border-left:5px solid var(--amarillo); border-radius:2px; }
+  .guia .quien { color:var(--amarillo); font-weight:600; }
+  .guia p { font-weight:400; color:#fff; }
+  .fuentes, .fuentes a, .equipo { color:var(--suave); }
+  .puntos i { width:12px; height:12px; background:var(--lila); border:2px solid var(--tinta); }
+  .puntos i.on { background:var(--amarillo); box-shadow:none; transform:scale(1.2); }
+  .aviso-idioma { color:var(--tinta); background:var(--amarillo); border:3px solid var(--tinta); border-radius:12px; font-weight:600; }
+  a { color:var(--amarillo); }
+
+  /* ---- Estilo de colores apagados para todo el sitio: fondo plano sin contorno, y linea negra
+     delgada solo en botones y tarjetas (como los personajes sobre el fondo) ---- */
+  :root { --tinta:#141414; --crema:#efe9dc; --gris:#c9c4b8; --mostaza:#e3b04b; --azul-ap:#5a86c9;
+    --acento:#e3b04b; --suave:#c3cad8; --texto:#f3efe6; }
+  body { background:repeating-linear-gradient(180deg, #16213a 0, #16213a 11vh, #1a2742 11vh, #1a2742 22vh, #1f2e4c 22vh, #1f2e4c 33vh,
+    #223252 33vh, #223252 44vh, #26385a 44vh, #26385a 55vh, #2a3d61 55vh, #2a3d61 100vh); background-attachment:fixed; }
+  header { background:#121a2e; border-bottom:2px solid var(--tinta); box-shadow:none; }
+  header .marca { color:var(--mostaza); }
+  nav button { border:2px solid transparent; color:var(--suave); }
+  nav button.activo, nav button:hover { color:var(--tinta); background:var(--mostaza); border-color:var(--tinta); }
+  nav select { background:var(--crema); border:2px solid var(--tinta); }
+  .vidrio, .dato, .video, #panel-planetario, #ficha, #botones-idioma, #entrada p {
+    background:var(--crema); color:var(--tinta); border:2px solid var(--tinta); border-radius:12px; box-shadow:3px 3px 0 rgba(0,0,0,.35); }
+  #panel-planetario p, #ficha p, .video .pie, .dato span, .sin-video { color:#4a4740 !important; }
+  .btn, #entrada .btn { background:var(--gris); color:var(--tinta); border:2px solid var(--tinta); border-radius:12px;
+    box-shadow:3px 3px 0 rgba(0,0,0,.35); }
+  .btn.principal, #entrada .btn.principal { background:var(--mostaza); }
+  #entrada .btn:not(.principal) { background:var(--gris); box-shadow:3px 3px 0 rgba(0,0,0,.35); }
+  .btn:hover, #entrada .btn:hover { transform:translateY(-1px); box-shadow:4px 4px 0 rgba(0,0,0,.35); }
+  .btn:active, #entrada .btn:active { transform:translateY(2px); box-shadow:1px 1px 0 rgba(0,0,0,.35); }
+  #btn-idioma, #entrada #btn-idioma { background:var(--crema); border:2px solid var(--tinta); border-radius:12px; box-shadow:3px 3px 0 rgba(0,0,0,.35); }
+  #botones-idioma button:hover { background:var(--mostaza); }
+  #botones-idioma button.on { color:#2f5ea8; }
+  #entrada h1 { -webkit-text-stroke:2px var(--tinta); text-shadow:3px 3px 0 rgba(0,0,0,.45); color:var(--texto); }
+  .sala h2 { -webkit-text-stroke:1.5px var(--tinta); text-shadow:2px 2px 0 rgba(0,0,0,.45); color:var(--texto); }
+  .sala-num, .guia .quien { color:var(--mostaza); }
+  .guia { border-left:4px solid var(--mostaza); }
+  .guia p { color:var(--texto); }
+  .puntos i { background:var(--gris); border:2px solid var(--tinta); }
+  .puntos i.on { background:var(--mostaza); }
+  .aviso-idioma { background:var(--mostaza); border:2px solid var(--tinta); }
+  a { color:var(--mostaza); }
+  [dir="rtl"] .guia { border-left:none; border-right:4px solid var(--mostaza); padding:4px 18px 4px 0; }
+
+  /* ---- Museo como galeria ---- */
+  #museo .sala { max-width:none; padding:0; margin:0; }
+  .salon { position:relative; height:calc(100vh - 58px - 74px); min-height:560px; overflow:hidden; border-bottom:2px solid var(--tinta); }
+  .pared { position:absolute; inset:0 0 30% 0;
+    background:repeating-linear-gradient(90deg, var(--pared) 0 46px, color-mix(in srgb, var(--pared) 88%, #000) 46px 48px); }
+  .pared::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,0) 35%, rgba(0,0,0,.12)); pointer-events:none; }
+  .lampara { position:absolute; top:0; width:70px; height:14px; background:#2a2a2a; border:2px solid var(--tinta); border-top:none; border-radius:0 0 10px 10px; z-index:2; }
+  .l1 { left:calc(50% - 160px); } .l2 { left:calc(50% + 90px); }
+  .luz { position:absolute; top:12px; left:50%; width:min(760px, 90%); height:100%; transform:translateX(-50%);
+    background:radial-gradient(ellipse 50% 70% at 50% 45%, rgba(255,240,200,.22), rgba(255,240,200,0) 70%); pointer-events:none; }
+  .letrero { position:absolute; top:22px; left:0; right:0; text-align:center; z-index:2; padding:0 120px; }
+  .letrero small { display:block; color:var(--mostaza); font:600 13px 'Fredoka', sans-serif; letter-spacing:2px; text-transform:uppercase; }
+  .letrero span { display:block; font:600 clamp(20px,2.6vw,32px) 'Fredoka', sans-serif; color:#f3efe6;
+    -webkit-text-stroke:1.5px var(--tinta); paint-order:stroke fill; text-shadow:2px 2px 0 rgba(0,0,0,.4); }
+  .muro { position:absolute; inset:96px 110px 18px; display:grid; grid-template-columns:1fr minmax(0,2.2fr) 1fr; gap:22px; align-items:center; z-index:1; }
+  .expo { display:flex; flex-direction:column; align-items:center; gap:10px; height:100%; justify-content:center; min-height:0; }
+  .cuadro { background:#c9a24a; padding:12px; border:2px solid var(--tinta); box-shadow:inset 0 0 0 3px #a8832f, 6px 8px 0 rgba(0,0,0,.35);
+    height:min(100%, 40vh); aspect-ratio:4/3; max-width:100%; display:flex; }
+  .lienzo { flex:1; background:#0d1428; border:2px solid var(--tinta); overflow:hidden; display:flex; align-items:center; justify-content:center; }
+  .lienzo img, .lienzo svg { width:100%; height:100%; object-fit:contain; display:block; image-rendering:pixelated; }
+  .lienzo .sin-video { color:#c3cad8 !important; font-size:13px; padding:12px; text-align:center; }
+  .vacio { position:relative; width:100%; height:100%; }
+  .vacio span { position:absolute; left:0; right:0; bottom:10px; text-align:center; color:#c3cad8; font-size:12px; }
+  .placa { background:#efe9dc; color:#4a4740; border:2px solid var(--tinta); border-radius:4px; font-size:12px; line-height:1.4;
+    padding:6px 10px; max-width:420px; text-align:center; box-shadow:2px 2px 0 rgba(0,0,0,.3); }
+  .cedulas { display:flex; flex-direction:column; gap:12px; align-items:center; }
+  .cedula { width:100%; max-width:210px; }
+  .cedulas:first-child .cedula:nth-child(2) { transform:rotate(-1deg); } .cedulas:last-child .cedula:nth-child(1) { transform:rotate(1deg); }
+  .cedula { background:#efe9dc; border:2px solid var(--tinta); border-radius:4px; padding:8px 10px; box-shadow:2px 2px 0 rgba(0,0,0,.3); }
+  .cedula b { display:block; font:600 15px 'Fredoka', sans-serif; color:var(--tinta); }
+  .cedula span { display:block; font-size:12px; color:#4a4740; }
+  .puerta { position:absolute; bottom:0; width:84px; height:62%; background:none; border:none; cursor:pointer; z-index:3; padding:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; }
+  .puerta.izq { left:14px; } .puerta.der { right:14px; }
+  .marco-puerta { width:100%; flex:1; background:#1a2033; border:6px solid #8a6a3a; border-bottom:none; outline:2px solid var(--tinta);
+    border-radius:42px 42px 0 0; display:flex; align-items:center; justify-content:center; transition:background .2s; }
+  .puerta:hover .marco-puerta { background:#2a3352; }
+  .flecha { font:700 40px 'Fredoka', sans-serif; color:var(--mostaza); }
+  .puerta small { position:absolute; top:-26px; white-space:nowrap; background:var(--mostaza); color:var(--tinta); border:2px solid var(--tinta);
+    border-radius:8px; padding:2px 8px; font:600 12px 'Fredoka', sans-serif; }
+  .zoclo { position:absolute; left:0; right:0; bottom:30%; height:14px; background:#3a2c22; border-top:2px solid var(--tinta); border-bottom:2px solid var(--tinta); z-index:2; }
+  .piso { position:absolute; left:0; right:0; bottom:0; height:30%;
+    background:repeating-linear-gradient(90deg, #8a6a46 0 120px, #7d603f 120px 122px), #8a6a46; }
+  .piso::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,0) 40%); }
+  .poste { position:absolute; top:10%; width:10px; height:44%; background:#c9a24a; border:2px solid var(--tinta); border-radius:4px; z-index:1; }
+  .poste::before { content:""; position:absolute; top:-8px; left:-5px; width:16px; height:10px; border-radius:50%; background:#c9a24a; border:2px solid var(--tinta); }
+  .poste::after { content:""; position:absolute; bottom:-4px; left:-9px; width:24px; height:6px; border-radius:3px; background:#a8832f; border:2px solid var(--tinta); }
+  .p1 { left:calc(50% - 240px); } .p2 { left:calc(50% + 230px); }
+  .cordon { position:absolute; top:calc(10% + 6px); left:calc(50% - 232px); width:470px; height:30px; border:5px solid #9a2f2f; border-top:none; border-radius:0 0 50% 50%; }
+  .banca { display:none; }
+  .dialogo { position:absolute; left:50%; bottom:14px; transform:translateX(-50%); width:min(820px, calc(100% - 28px)); z-index:4;
+    background:var(--crema); color:var(--tinta); border:2px solid var(--tinta); border-radius:14px; box-shadow:4px 4px 0 rgba(0,0,0,.4); padding:12px 18px 10px; }
+  .dialogo .quien { position:absolute; top:-14px; left:16px; background:var(--mostaza); border:2px solid var(--tinta); border-radius:8px;
+    padding:1px 10px; font:600 12px 'Fredoka', sans-serif; letter-spacing:1px; text-transform:uppercase; color:var(--tinta); }
+  [dir="rtl"] .dialogo .quien { left:auto; right:16px; }
+  .dialogo p { margin:6px 0 8px; font-size:16px; line-height:1.55; min-height:3.1em; }
+  .dlg-pie { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+  .dlg-pie .acciones { margin:0; }
+  .dlg-pie .acciones .btn { padding:6px 12px; font-size:13px; }
+  .dlg-nav { display:flex; align-items:center; gap:8px; margin-inline-start:auto; font:600 13px 'Fredoka', sans-serif; }
+  .dlg-nav .btn { padding:2px 14px; font-size:22px; line-height:1.2; }
+  #dlg-txt.aparecer { animation:aparecer .35s ease; }
+  .ficha-tecnica { max-width:1100px; margin:18px auto 0; padding:0 20px; font-size:13px; color:var(--suave); line-height:1.7; }
+  .ficha-tecnica a { color:var(--suave); }
+  @media (max-width: 900px) {
+    .salon { height:auto; min-height:0; padding-bottom:12px; }
+    .pared, .piso, .zoclo { position:relative; inset:auto; }
+    .pared { padding:20px 12px 18px; }
+    .letrero { position:static; padding:0 70px 14px; }
+    .muro { position:static; display:flex; flex-direction:column; gap:14px; }
+    .cedulas { flex-direction:row; flex-wrap:wrap; justify-content:center; }
+    .cuadro { height:auto; width:100%; }
+    .puerta { height:90px; width:56px; top:14px; bottom:auto; }
+    .puerta small { display:none; }
+    .zoclo { height:10px; }
+    .piso { height:60px; }
+    .poste, .cordon { display:none; }
+    .dialogo { position:relative; left:auto; bottom:auto; transform:none; margin:-30px auto 0; }
+  }
+
+  /* ASTRO, el guia: busto del astronauta junto al cuadro de dialogo */
+  .dialogo { padding-inline-start:160px; }
+  .astro-guia { position:absolute; inset-inline-start:4px; bottom:0; width:150px; height:auto; overflow:visible; }
+  [dir="rtl"] .astro-guia { transform:scaleX(-1); }
+  .astro-guia .brazo { transform-origin:124px 120px; animation:saludo 3.2s ease-in-out infinite; }
+  @keyframes saludo { 0%,70%,100% { transform:rotate(0); } 78% { transform:rotate(-12deg); } 86% { transform:rotate(8deg); } 94% { transform:rotate(-6deg); } }
+  .astro-guia.habla { animation:habla .4s ease; }
+  @keyframes habla { 0%,100% { translate:0 0; } 40% { translate:0 -6px; } }
+  .dialogo .quien { left:166px; }
+  [dir="rtl"] .dialogo .quien { left:auto; right:166px; }
+  @media (max-width: 600px) { .dialogo { padding-inline-start:100px; } .astro-guia { width:96px; } .dialogo .quien { left:106px; } }
+  @media (prefers-reduced-motion: reduce) { .astro-guia .brazo, .astro-guia.habla { animation:none; } }
+
+  /* ---- Transiciones suaves ---- */
+  .vista.activa { animation:fundido .45s ease; }
+  @keyframes fundido { from { opacity:0; } to { opacity:1; } }
+  body.cambiando .vista.activa { opacity:0; transition:opacity .25s ease; }
+  #sala.sale-izq { animation:saleIzq .28s ease-in forwards; }
+  #sala.sale-der { animation:saleDer .28s ease-in forwards; }
+  #sala.entra-der { animation:entraDer .45s ease-out; }
+  #sala.entra-izq { animation:entraIzq .45s ease-out; }
+  @keyframes saleIzq { to { opacity:0; transform:translateX(-60px); } }
+  @keyframes saleDer { to { opacity:0; transform:translateX(60px); } }
+  @keyframes entraDer { from { opacity:0; transform:translateX(60px); } to { opacity:1; transform:none; } }
+  @keyframes entraIzq { from { opacity:0; transform:translateX(-60px); } to { opacity:1; transform:none; } }
+  #sala { overflow-x:hidden; }
+  #aladin { opacity:0; transition:opacity 1.8s ease; filter:brightness(.85); background:#000; }
+  #planetario.cielo-listo #aladin { opacity:1; }
+  #cargando-cielo { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:5; display:flex; flex-direction:column;
+    align-items:center; gap:12px; color:var(--suave); font:600 15px 'Fredoka', sans-serif; transition:opacity 1s ease; pointer-events:none; }
+  #planetario.cielo-listo #cargando-cielo { opacity:0; }
+  .anillo { width:34px; height:34px; border-radius:50%; border:3px solid rgba(255,255,255,.15); border-top-color:var(--mostaza); animation:gira 1s linear infinite; }
+  @keyframes gira { to { transform:rotate(360deg); } }
+  #panel-planetario { transition:opacity .8s ease .6s; }
+  #planetario:not(.cielo-listo) #panel-planetario { opacity:0; }
+  @media (prefers-reduced-motion: reduce) {
+    .vista.activa, #sala.sale-izq, #sala.sale-der, #sala.entra-der, #sala.entra-izq { animation:none; }
+    #aladin { transition:none; } .anillo { animation:none; }
+  }
+</style>
+
+</head>
+<body>
+
+<canvas id="estrellas" aria-hidden="true"></canvas>
+<header>
+  <div class="marca">Planet X con SPHEREx</div>
+  <nav>
+    <button data-vista="entrada" data-t="nav_inicio">Inicio</button>
+    <button data-vista="planetario" data-t="nav_planetario">Planetario</button>
+    <button data-vista="museo" data-t="nav_museo">Museo</button>
+    <button id="btn-sonido" onclick="sonido()" style="display:none">Sonido: apagado</button>
+    <select id="idioma" aria-label="Idioma / Language" onchange="cambiarIdioma(this.value)"></select>
+  </nav>
+</header>
+
+<!-- ENTRADA -->
+<section id="entrada" class="vista activa">
+  <canvas id="pixel" aria-hidden="true"></canvas>
+  <div>
+    <div class="idiomas-inicio">
+      <button id="btn-idioma" onclick="abrirIdiomas(event)" aria-haspopup="true" aria-expanded="false"></button>
+      <div id="botones-idioma" role="menu"></div>
+    </div>
+    <h1 data-t="h1">El cielo en movimiento</h1>
+    <p data-t="intro">Las estrellas parecen quietas, pero no lo están. Con las imágenes del telescopio espacial
+      SPHEREx de la NASA, recorre un museo de objetos que se mueven y cambian de brillo,
+      o párate en el centro del cielo y mira a tu alrededor.</p>
+    <div class="botones">
+      <button class="btn principal" onclick="irA('museo', 0)" data-t="comenzar">Comenzar el recorrido</button>
+      <button class="btn" onclick="irA('planetario')" data-t="entrar_plan">Entrar al planetario</button>
+    </div>
+  </div>
+</section>
+
+<!-- PLANETARIO -->
+<section id="planetario" class="vista">
+  <div id="aladin"></div>
+  <div id="cargando-cielo"><span class="anillo"></span><span data-t="cargando_cielo">Cargando el cielo...</span></div>
+  <div id="panel-planetario">
+    <h2 data-t="plan_titulo">Estás en el centro del cielo</h2>
+    <p data-t="plan_texto">Arrastra con el mouse (o el dedo) para mirar hacia los lados y hacia arriba.
+      Usa la rueda para acercarte. La banda brillante es nuestra galaxia, la Vía Láctea.
+      Los nombres marcan los objetos del museo: haz clic en uno.</p>
+    <div class="acciones">
+      <button class="btn" onclick="recorridoPlanetario()" data-t="recorrido">Recorrido guiado</button>
+      <button class="btn" onclick="vistaCompleta()" data-t="ver_todo">Ver todo el cielo</button>
+    </div>
+  </div>
+  <div id="ficha"></div>
+  <div id="errores" title="Clic para cerrar" onclick="this.style.display='none'" style="cursor:pointer;display:none;position:fixed;top:70px;left:20px;right:20px;z-index:30;background:#200;border:1px solid #a33;color:#fbb;padding:10px;font:13px monospace;white-space:pre-wrap"></div>
+</section>
+
+<!-- MUSEO -->
+<section id="museo" class="vista">
+  <div id="sala" class="sala"></div>
+  <div class="navsala">
+    <button class="btn" id="ant" onclick="mover(-1)" data-t="anterior">Anterior</button>
+    <div class="puntos" id="puntos"></div>
+    <button class="btn principal" id="sig" onclick="mover(1)" data-t="siguiente">Siguiente</button>
+  </div>
+</section>
+
+<script>
+function mostrarError(t) {
+  const txt = String(t);
+  // Fallas de red de servidores de respaldo: no se muestran (la pagina ya usa otro servidor)
+  if (/Failed to fetch|HiPS|NetworkError|Load failed/i.test(txt)) { console.warn(txt); return; }
+  const e = document.getElementById('errores'); if (!e) return;
+  if (e.childElementCount >= 3) return;
+  e.style.display = 'block';
+  const d = document.createElement('div'); d.textContent = 'Aviso: ' + String(t).split('\n')[0]; e.appendChild(d);
+}
+window.addEventListener('error', ev => mostrarError(ev.message + ' (' + (ev.filename || '') + ':' + (ev.lineno || '') + ')'));
+window.addEventListener('unhandledrejection', ev => mostrarError(String(ev.reason && (ev.reason.message || ev.reason))));
+// Carga Aladin Lite (CDS) probando varias direcciones del mismo proyecto
+const ALADIN_URLS = [
+  "https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js",
+  "https://aladin.u-strasbg.fr/AladinLite/api/v3/latest/aladin.js",
+  "https://aladin.unistra.fr/AladinLite/api/v3/latest/aladin.js"
+];
+let promesaAladin = null;
+function cargarAladin() {
+  if (promesaAladin) return promesaAladin;
+  promesaAladin = new Promise((ok, mal) => {
+    let i = 0;
+    const probar = () => {
+      if (typeof A !== 'undefined') return ok();
+      if (i >= ALADIN_URLS.length) {
+        // Respaldo: copia publica del paquete aladin-lite en jsDelivr
+        return import('https://cdn.jsdelivr.net/npm/aladin-lite/+esm')
+          .then(m => { window.A = m.default || m.A || m; ok(); })
+          .catch(e => mal(new Error('No se pudo descargar Aladin de ningun servidor (' + (e.message || e) + ').')));
+      }
+      const sc = document.createElement('script');
+      sc.src = ALADIN_URLS[i++]; sc.charset = 'utf-8';
+      sc.onload = () => (typeof A !== 'undefined') ? ok() : probar();
+      sc.onerror = probar;
+      document.head.appendChild(sc);
+    };
+    probar();
+  });
+  return promesaAladin;
+}
+// Herramienta en vivo (Streamlit). Busca sola al abrir con ?coord=
+const HERRAMIENTA = "https://planetx-spherex-lc34zndttbbuknhhdfnhaq.streamlit.app";
+
+// ---------------------------------------------------------------------------
+// Idiomas. Textos fijos de la pagina en 10 idiomas.
+// El contenido de las salas puede venir como texto (espanol) o como objeto
+// {es:..., en:..., ...}; si falta un idioma se muestra en espanol con un aviso.
+// ---------------------------------------------------------------------------
+const IDIOMAS = { es:'Español', en:'English', fr:'Français', pt:'Português', de:'Deutsch',
+  ko:'한국어', zh:'中文', th:'ไทย', ar:'العربية', ja:'日本語' };
+const T = {
+  nav_inicio:{es:'Inicio',en:'Home',fr:'Accueil',pt:'Início',de:'Start',ko:'처음',zh:'首页',th:'หน้าแรก',ar:'الرئيسية',ja:'ホーム'},
+  nav_planetario:{es:'Planetario',en:'Planetarium',fr:'Planétarium',pt:'Planetário',de:'Planetarium',ko:'천체투영관',zh:'天象馆',th:'ท้องฟ้าจำลอง',ar:'القبة السماوية',ja:'プラネタリウム'},
+  nav_museo:{es:'Museo',en:'Museum',fr:'Musée',pt:'Museu',de:'Museum',ko:'박물관',zh:'博物馆',th:'พิพิธภัณฑ์',ar:'المتحف',ja:'博物館'},
+  h1:{es:'El cielo en movimiento',en:'The sky in motion',fr:'Le ciel en mouvement',pt:'O céu em movimento',de:'Der Himmel in Bewegung',ko:'움직이는 하늘',zh:'运动中的天空',th:'ท้องฟ้าที่เคลื่อนไหว',ar:'السماء في حركة',ja:'動く夜空'},
+  intro:{es:'Las estrellas parecen quietas, pero no lo están. Con las imágenes del telescopio espacial SPHEREx de la NASA, recorre un museo de objetos que se mueven y cambian de brillo, o párate en el centro del cielo y mira a tu alrededor.',
+    en:"The stars seem still, but they are not. With images from NASA's SPHEREx space telescope, walk through a museum of objects that move and change brightness, or stand at the center of the sky and look around you.",
+    fr:"Les étoiles semblent immobiles, mais elles ne le sont pas. Avec les images du télescope spatial SPHEREx de la NASA, parcourez un musée d'objets qui se déplacent et changent d'éclat, ou placez-vous au centre du ciel et regardez autour de vous.",
+    pt:'As estrelas parecem paradas, mas não estão. Com as imagens do telescópio espacial SPHEREx da NASA, percorra um museu de objetos que se movem e mudam de brilho, ou fique no centro do céu e olhe ao seu redor.',
+    de:'Die Sterne scheinen stillzustehen, aber das tun sie nicht. Mit Bildern des NASA-Weltraumteleskops SPHEREx besuchst du ein Museum voller Objekte, die sich bewegen und ihre Helligkeit ändern – oder du stellst dich in die Mitte des Himmels und schaust dich um.',
+    ko:'별들은 멈춰 있는 것처럼 보이지만 사실은 그렇지 않습니다. NASA의 SPHEREx 우주망원경 이미지로 움직이고 밝기가 변하는 천체들의 박물관을 둘러보거나, 하늘의 한가운데에 서서 주위를 둘러보세요.',
+    zh:'星星看似静止，其实并非如此。借助 NASA SPHEREx 太空望远镜的图像，参观一座展示会移动、会变亮变暗的天体的博物馆，或者站在天空的中心环顾四周。',
+    th:'ดวงดาวดูเหมือนอยู่นิ่ง แต่ความจริงไม่ใช่ ด้วยภาพจากกล้องโทรทรรศน์อวกาศ SPHEREx ของ NASA มาเดินชมพิพิธภัณฑ์ของวัตถุที่เคลื่อนที่และเปลี่ยนความสว่าง หรือยืนอยู่กลางท้องฟ้าแล้วมองไปรอบตัว',
+    ar:'تبدو النجوم ثابتة، لكنها ليست كذلك. باستخدام صور تلسكوب الفضاء SPHEREx التابع لناسا، تجوّل في متحف لأجرام تتحرك ويتغير سطوعها، أو قف في مركز السماء وانظر من حولك.',
+    ja:'星は止まっているように見えますが、実はそうではありません。NASAの宇宙望遠鏡SPHERExの画像で、動いたり明るさが変わったりする天体の博物館をめぐるか、空の中心に立ってまわりを見わたしてみましょう。'},
+  comenzar:{es:'Comenzar el recorrido',en:'Start the tour',fr:'Commencer la visite',pt:'Começar o passeio',de:'Rundgang starten',ko:'관람 시작',zh:'开始参观',th:'เริ่มการเยี่ยมชม',ar:'ابدأ الجولة',ja:'ツアーを始める'},
+  entrar_plan:{es:'Entrar al planetario',en:'Enter the planetarium',fr:'Entrer dans le planétarium',pt:'Entrar no planetário',de:'Planetarium betreten',ko:'천체투영관 들어가기',zh:'进入天象馆',th:'เข้าสู่ท้องฟ้าจำลอง',ar:'ادخل القبة السماوية',ja:'プラネタリウムに入る'},
+  plan_titulo:{es:'Estás en el centro del cielo',en:'You are at the center of the sky',fr:'Vous êtes au centre du ciel',pt:'Você está no centro do céu',de:'Du stehst im Zentrum des Himmels',ko:'당신은 하늘의 중심에 있습니다',zh:'你正站在天空的中心',th:'คุณอยู่ใจกลางท้องฟ้า',ar:'أنت في مركز السماء',ja:'あなたは空の中心にいます'},
+  plan_texto:{es:'Arrastra con el mouse (o el dedo) para mirar hacia los lados y hacia arriba. Usa la rueda para acercarte. La banda brillante es nuestra galaxia, la Vía Láctea. Los nombres marcan los objetos del museo: haz clic en uno.',
+    en:"Drag with the mouse (or your finger) to look sideways and up. Use the wheel to zoom in. The bright band is our galaxy, the Milky Way. The names mark the museum's objects: click one.",
+    fr:"Faites glisser avec la souris (ou le doigt) pour regarder sur les côtés et vers le haut. Utilisez la molette pour zoomer. La bande lumineuse est notre galaxie, la Voie lactée. Les noms indiquent les objets du musée : cliquez sur l'un d'eux.",
+    pt:'Arraste com o mouse (ou o dedo) para olhar para os lados e para cima. Use a roda para aproximar. A faixa brilhante é a nossa galáxia, a Via Láctea. Os nomes marcam os objetos do museu: clique em um.',
+    de:'Ziehe mit der Maus (oder dem Finger), um zur Seite und nach oben zu schauen. Mit dem Mausrad zoomst du hinein. Das helle Band ist unsere Galaxie, die Milchstraße. Die Namen markieren die Objekte des Museums: Klicke eines an.',
+    ko:'마우스(또는 손가락)로 끌어서 옆과 위를 둘러보세요. 휠로 확대할 수 있습니다. 밝은 띠는 우리 은하, 은하수입니다. 이름이 표시된 곳은 박물관의 천체입니다. 하나를 클릭해 보세요.',
+    zh:'用鼠标（或手指）拖动，向两侧和上方看。用滚轮放大。那条明亮的光带就是我们的银河系——银河。标有名字的是博物馆中的天体：点击其中一个。',
+    th:'ลากด้วยเมาส์ (หรือนิ้ว) เพื่อมองไปด้านข้างและด้านบน ใช้ลูกกลิ้งเพื่อซูมเข้า แถบสว่างคือกาแล็กซีของเรา ทางช้างเผือก ชื่อที่แสดงไว้คือวัตถุในพิพิธภัณฑ์ คลิกที่ชื่อใดชื่อหนึ่ง',
+    ar:'اسحب بالفأرة (أو بإصبعك) لتنظر إلى الجانبين وإلى الأعلى. استخدم العجلة للتكبير. الشريط اللامع هو مجرتنا، درب التبانة. تشير الأسماء إلى أجرام المتحف: انقر على أحدها.',
+    ja:'マウス（または指）でドラッグすると、横や上を見わたせます。ホイールで拡大できます。明るい帯は私たちの銀河、天の川です。名前の付いた天体は博物館の展示です。クリックしてみましょう。'},
+  recorrido:{es:'Recorrido guiado',en:'Guided tour',fr:'Visite guidée',pt:'Passeio guiado',de:'Geführte Tour',ko:'가이드 투어',zh:'导览',th:'ทัวร์นำชม',ar:'جولة إرشادية',ja:'ガイドツアー'},
+  ver_todo:{es:'Ver todo el cielo',en:'See the whole sky',fr:'Voir tout le ciel',pt:'Ver o céu inteiro',de:'Ganzen Himmel ansehen',ko:'하늘 전체 보기',zh:'查看整个天空',th:'ดูท้องฟ้าทั้งหมด',ar:'عرض السماء كلها',ja:'空全体を見る'},
+  anterior:{es:'Anterior',en:'Previous',fr:'Précédent',pt:'Anterior',de:'Zurück',ko:'이전',zh:'上一个',th:'ก่อนหน้า',ar:'السابق',ja:'前へ'},
+  siguiente:{es:'Siguiente',en:'Next',fr:'Suivant',pt:'Próximo',de:'Weiter',ko:'다음',zh:'下一个',th:'ถัดไป',ar:'التالي',ja:'次へ'},
+  cargando_cielo:{es:'Cargando el cielo...',en:'Loading the sky...',fr:'Chargement du ciel...',pt:'Carregando o céu...',de:'Der Himmel wird geladen...',ko:'하늘을 불러오는 중...',zh:'正在加载天空……',th:'กำลังโหลดท้องฟ้า...',ar:'جارٍ تحميل السماء...',ja:'空を読み込み中...'},
+  sala:{es:'Sala {n} de {t}',en:'Room {n} of {t}',fr:'Salle {n} sur {t}',pt:'Sala {n} de {t}',de:'Raum {n} von {t}',ko:'전시실 {n} / {t}',zh:'第 {n} 展厅，共 {t} 个',th:'ห้อง {n} จาก {t}',ar:'القاعة {n} من {t}',ja:'展示室 {n} / {t}'},
+  tu_guia:{es:'Tu guía',en:'Your guide',fr:'Votre guide',pt:'Seu guia',de:'Dein Guide',ko:'안내자',zh:'你的向导',th:'ไกด์ของคุณ',ar:'مرشدك',ja:'ガイド'},
+  ver_en_plan:{es:'Ver en el planetario',en:'See it in the planetarium',fr:'Voir dans le planétarium',pt:'Ver no planetário',de:'Im Planetarium ansehen',ko:'천체투영관에서 보기',zh:'在天象馆中查看',th:'ดูในท้องฟ้าจำลอง',ar:'شاهده في القبة السماوية',ja:'プラネタリウムで見る'},
+  explorar:{es:'Explorar con datos en vivo',en:'Explore with live data',fr:'Explorer avec des données en direct',pt:'Explorar com dados ao vivo',de:'Mit Live-Daten erkunden',ko:'실시간 데이터로 탐색',zh:'用实时数据探索',th:'สำรวจด้วยข้อมูลสด',ar:'استكشف ببيانات حية',ja:'ライブデータで探索'},
+  ir_plan:{es:'Ir al planetario',en:'Go to the planetarium',fr:'Aller au planétarium',pt:'Ir ao planetário',de:'Zum Planetarium',ko:'천체투영관으로 가기',zh:'前往天象馆',th:'ไปที่ท้องฟ้าจำลอง',ar:'اذهب إلى القبة السماوية',ja:'プラネタリウムへ'},
+  abrir_herr:{es:'Abrir la herramienta',en:'Open the tool',fr:"Ouvrir l'outil",pt:'Abrir a ferramenta',de:'Werkzeug öffnen',ko:'도구 열기',zh:'打开工具',th:'เปิดเครื่องมือ',ar:'افتح الأداة',ja:'ツールを開く'},
+  fuentes:{es:'Fuentes',en:'Sources',fr:'Sources',pt:'Fontes',de:'Quellen',ko:'출처',zh:'资料来源',th:'แหล่งที่มา',ar:'المصادر',ja:'出典'},
+  ir_sala:{es:'Ir a su sala',en:'Go to its room',fr:'Aller à sa salle',pt:'Ir para a sala',de:'Zu seinem Raum',ko:'전시실로 가기',zh:'前往展厅',th:'ไปที่ห้องจัดแสดง',ar:'اذهب إلى قاعته',ja:'展示室へ'},
+  cerrar:{es:'Cerrar',en:'Close',fr:'Fermer',pt:'Fechar',de:'Schließen',ko:'닫기',zh:'关闭',th:'ปิด',ar:'إغلاق',ja:'閉じる'},
+  video_no:{es:'El video de esta sala todavía no está listo.',en:"This room's video is not ready yet.",fr:"La vidéo de cette salle n'est pas encore prête.",pt:'O vídeo desta sala ainda não está pronto.',de:'Das Video dieses Raums ist noch nicht fertig.',ko:'이 전시실의 영상은 아직 준비되지 않았습니다.',zh:'本展厅的视频尚未准备好。',th:'วิดีโอของห้องนี้ยังไม่พร้อม',ar:'فيديو هذه القاعة ليس جاهزًا بعد.',ja:'この展示室の動画はまだ準備中です。'},
+  sonido_on:{es:'Sonido: encendido',en:'Sound: on',fr:'Son : activé',pt:'Som: ligado',de:'Ton: an',ko:'소리: 켜짐',zh:'声音：开',th:'เสียง: เปิด',ar:'الصوت: تشغيل',ja:'サウンド：オン'},
+  sonido_off:{es:'Sonido: apagado',en:'Sound: off',fr:'Son : désactivé',pt:'Som: desligado',de:'Ton: aus',ko:'소리: 꺼짐',zh:'声音：关',th:'เสียง: ปิด',ar:'الصوت: إيقاف',ja:'サウンド：オフ'},
+  sin_cielo:{es:'Los servidores con las fotos del cielo no responden en este momento. Intenta más tarde.',en:'The servers with the sky images are not responding right now. Please try again later.',fr:'Les serveurs des images du ciel ne répondent pas pour le moment. Réessayez plus tard.',pt:'Os servidores com as imagens do céu não estão respondendo agora. Tente mais tarde.',de:'Die Server mit den Himmelsbildern antworten gerade nicht. Bitte versuche es später erneut.',ko:'하늘 이미지 서버가 지금 응답하지 않습니다. 나중에 다시 시도하세요.',zh:'天空图像服务器目前没有响应。请稍后再试。',th:'เซิร์ฟเวอร์ภาพท้องฟ้าไม่ตอบสนองในขณะนี้ โปรดลองอีกครั้งภายหลัง',ar:'خوادم صور السماء لا تستجيب الآن. حاول مرة أخرى لاحقًا.',ja:'空の画像のサーバーが現在応答していません。しばらくしてからもう一度お試しください。'},
+  proyecto:{es:'Proyecto para el NASA Space Apps Challenge 2026.',en:'Project for the NASA Space Apps Challenge 2026.',fr:'Projet pour le NASA Space Apps Challenge 2026.',pt:'Projeto para o NASA Space Apps Challenge 2026.',de:'Projekt für die NASA Space Apps Challenge 2026.',ko:'2026 NASA Space Apps Challenge 프로젝트.',zh:'2026 年 NASA Space Apps Challenge 参赛项目。',th:'โครงการสำหรับ NASA Space Apps Challenge 2026',ar:'مشروع لمسابقة NASA Space Apps Challenge 2026.',ja:'NASA Space Apps Challenge 2026 のためのプロジェクト。'},
+  idioma_lbl:{es:'Idioma',en:'Language',fr:'Langue',pt:'Idioma',de:'Sprache',ko:'언어',zh:'语言',th:'ภาษา',ar:'اللغة',ja:'言語'},
+  elige_idioma:{es:'Elige tu idioma',en:'Choose your language',fr:'Choisissez votre langue',pt:'Escolha seu idioma',de:'Wähle deine Sprache',ko:'언어를 선택하세요',zh:'选择你的语言',th:'เลือกภาษาของคุณ',ar:'اختر لغتك',ja:'言語を選んでください'},
+  solo_es:{es:'',en:'Room content currently available in Spanish only.',fr:'Contenu de la salle disponible pour l\'instant en espagnol.',pt:'Conteúdo da sala disponível por enquanto em espanhol.',de:'Inhalt dieses Raums vorerst nur auf Spanisch.',ko:'이 전시실의 내용은 현재 스페인어로만 제공됩니다.',zh:'本展厅内容目前仅提供西班牙语版本。',th:'เนื้อหาของห้องนี้มีเฉพาะภาษาสเปนในขณะนี้',ar:'محتوى هذه القاعة متاح حاليًا باللغة الإسبانية فقط.',ja:'この展示室の内容は現在スペイン語のみです。'}
+};
+let idioma = (() => {
+  try {
+    const q = new URLSearchParams(location.search).get('lang');
+    if (q && IDIOMAS[q]) return q;
+    const g = localStorage.getItem('idioma'); if (g && IDIOMAS[g]) return g;
+  } catch (e) {}
+  const n = (navigator.language || 'es').slice(0, 2);
+  return IDIOMAS[n] ? n : 'es';
+})();
+function t(clave, vars) {
+  let s = (T[clave] && (T[clave][idioma] ?? T[clave].es)) || clave;
+  if (vars) for (const k in vars) s = s.replace('{' + k + '}', vars[k]);
+  return s;
+}
+// Contenido: texto simple (espanol) u objeto por idioma
+function tr(v) {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'string' || Array.isArray(v)) return v;
+  return v[idioma] ?? v.es;
+}
+function tieneIdioma(v) { return idioma === 'es' || (v && typeof v === 'object' && !Array.isArray(v) && v[idioma] !== undefined); }
+function aplicarIdioma() {
+  document.documentElement.lang = idioma;
+  document.documentElement.dir = idioma === 'ar' ? 'rtl' : 'ltr';
+  document.querySelectorAll('[data-t]').forEach(el => { el.textContent = t(el.dataset.t); });
+  document.querySelectorAll('#botones-idioma button').forEach(b => b.classList.toggle('on', b.dataset.l === idioma));
+  const selI = document.getElementById('idioma'); if (selI) selI.value = idioma;
+  const bI = document.getElementById('btn-idioma'); if (bI) bI.textContent = t('idioma_lbl') + ': ' + IDIOMAS[idioma] + '  \u25BE';
+  const b = document.getElementById('btn-sonido');
+  if (b) b.textContent = (typeof ambiente !== 'undefined' && !ambiente.paused) ? t('sonido_on') : t('sonido_off');
+  if (document.getElementById('museo').classList.contains('activa')) mostrarSala(salaActual);
+}
+function abrirIdiomas(ev) {
+  ev.stopPropagation();
+  const m = document.getElementById('botones-idioma'), b = document.getElementById('btn-idioma');
+  const abierto = m.classList.toggle('abierto'); b.setAttribute('aria-expanded', abierto);
+}
+document.addEventListener('click', () => {
+  const m = document.getElementById('botones-idioma'); if (m) m.classList.remove('abierto');
+  const b = document.getElementById('btn-idioma'); if (b) b.setAttribute('aria-expanded', 'false');
+});
+function cambiarIdioma(l) {
+  idioma = l; try { localStorage.setItem('idioma', l); } catch (e) {}
+  aplicarIdioma();
+}
+
+// ---------------------------------------------------------------------------
+// Contenido del museo. Cada sala: texto del guia, datos, video y fuentes.
+// ---------------------------------------------------------------------------
+const SALAS = [
+  {
+    titulo: "Bienvenida",
+    guia: [
+      "Hola, bienvenido. Yo seré tu guía en este museo del cielo en movimiento.",
+      "Desde 2025, la misión SPHEREx de la NASA fotografía todo el cielo cada seis meses en 102 colores de luz infrarroja cercana, y registra cientos de millones de galaxias y estrellas.",
+      "Cometas, asteroides, estrellas, enanas cafés e incluso planetas nuevos se pueden descubrir porque cambian de lugar o de brillo entre una foto y otra. Pero ninguna persona puede revisar sola tanta información. Por eso hicimos este museo: para que tú también puedas mirar.",
+      "Pasa a la siguiente sala para conocer al telescopio."
+    ],
+    datos: [], video: null,
+    fuentes: [
+      ["NASA/JPL (2025). SPHEREx completa su primer mapa del cielo en 102 colores", "https://www.jpl.nasa.gov/news/nasas-spherex-observatory-completes-first-cosmic-map-like-no-other/"],
+      ["Live Science (2025). SPHEREx recogerá datos de más de 450 millones de galaxias", "https://www.livescience.com/space/astronomy/nasa-telescope-combines-100-maps-of-the-universe-into-one-every-astronomer-is-going-to-find-something-of-value-here"]
+    ]
+  },
+  {
+    titulo: "SPHEREx, el fotógrafo del cielo",
+    guia: [
+      "SPHEREx salió al espacio el 11 de marzo de 2025 a bordo de un cohete Falcon 9, desde California.",
+      "Su gran poder es que fotografía el cielo completo, en todas direcciones, más o menos cada seis meses. Y no lo ve en un solo color: lo ve en 102 colores de luz infrarroja, que nuestros ojos no pueden ver.",
+      "Para lograrlo tiene seis detectores y cada uno separa la luz en 17 colores. Seis por diecisiete: 102 mapas del cielo cada vez. Como toma el cielo una y otra vez, podemos comparar fotos de distintas fechas y descubrir qué cambió."
+    ],
+    datos: [["11 mar 2025","lanzamiento"],["102","colores infrarrojos"],["~6 meses","para fotografiar todo el cielo"],["Dic 2025","primer mapa completo"]],
+    video: null,
+    fuentes: [
+      ["NASA/JPL (2025). SPHEREx completa su primer mapa del cielo", "https://www.jpl.nasa.gov/news/nasas-spherex-observatory-completes-first-cosmic-map-like-no-other/"],
+      ["ASU News (2025). Lanzamiento de SPHEREx", "https://news.asu.edu/20250312-science-and-technology-nasa-launches-space-telescope-chart-sky-and-millions-galaxies"]
+    ]
+  },
+  {
+    titulo: "La Estrella de Barnard", clave: "Barnard", ra: 269.452, dec: 4.693,
+    guia: [
+      "La Estrella de Barnard es una enana roja, una de nuestras vecinas más cercanas: está a unos 5.96 años luz, en la constelación de Ofiuco.",
+      "En 1916 el astrónomo Edward Emerson Barnard descubrió su récord: es la estrella con el mayor movimiento propio de todo el cielo. Avanza unos 10 segundos de arco cada año respecto a las estrellas del fondo.",
+      "Es mucho más pequeña, fría y tenue que nuestro Sol: tiene cerca del 16% de su masa y su superficie está a unos 3,200 grados. Como otras enanas rojas, brilla sobre todo en luz rojiza e infrarroja.",
+      "Mira el video: mientras las demás estrellas se quedan quietas, ella cambia de lugar. Y no está sola: entre 2024 y 2025 se confirmaron cuatro planetas pequeños girando a su alrededor."
+    ],
+    datos: [["5.96 años luz","distancia (1.83 pc)"],["1916","descubren su movimiento"],["~3,200 K","temperatura de su superficie"],["M4 V","enana roja, GJ 699"],["0.16","masas solares"],["4 planetas","confirmados en 2024-2025"]],
+    video: "videos/barnard.gif",
+    pie: "Fotos de SPHEREx de distintas fechas. La cruz marca dónde está la estrella; fíjate cómo se desplaza.",
+    fuentes: [
+      ["NASA Astrobiology (2018). Barnard's Star", "https://astrobiology.nasa.gov/news/barnards-star/"],
+      ["Britannica. Barnard's star", "https://www.britannica.com/place/Barnards-star"],
+      ["DLR (2025). La Estrella de Barnard tiene cuatro planetas", "https://www.dlr.de/en/wr/about-us/departments-1/extrasolar-planets-and-atmospheres/news-from-our-department-epa/barnards-star-actually-hosts-four-planets"],
+      ["NASA Exoplanet Archive. Barnard's star", "https://exoplanetarchive.ipac.caltech.edu/overview/barnard%20star"]
+    ]
+  },
+  {
+    titulo: "WISE 0855, la enana café más fría", clave: "WISE 0855", ra: 133.795, dec: -7.245,
+    guia: [
+      "Ahora conoce a un objeto extraño: WISE 0855−0714. No es una estrella ni un planeta: es una enana café de tipo Y, un objeto de masa parecida a la de un planeta que viaja solo por el espacio. Está a unos 7.4 años luz, en la constelación de Hidra.",
+      "Fue descubierta en 2014 con el telescopio infrarrojo WISE de la NASA. No tiene masa suficiente para fusionar hidrógeno como una estrella, así que casi no brilla en luz visible: solo suelta en infrarrojo el calor que le quedó desde que se formó.",
+      "Es el objeto de su tipo más frío que se conoce: entre 225 y 260 K, es decir, entre 48 y 13 grados bajo cero, tan frío como los lugares más helados de la Tierra. Su atmósfera tiene agua y metano. Se pensaba que podía tener nubes de hielo, pero el telescopio James Webb no las ha encontrado.",
+      "Estudiarla nos ayuda a entender la frontera entre los planetas gigantes y las estrellas más pequeñas. Por eso los telescopios infrarrojos como SPHEREx son perfectos para buscar mundos así."
+    ],
+    datos: [["7.4 años luz","distancia (2.28 pc)"],["2014","año de descubrimiento"],["225 a 260 K","temperatura (-48 a -13 °C)"],["Tipo Y","enana café aislada"],["Hidra","constelación"]],
+    video: "videos/wise0855.gif",
+    pie: "Fotos de SPHEREx en su infrarrojo más largo (detector D6), donde este objeto frío brilla más.",
+    fuentes: [
+      ["Beamín, J. C., et al. (2014). Temperature constraints on the coldest brown dwarf known: WISE 0855-0714. Astronomy & Astrophysics, 570, L8", "https://ui.adsabs.harvard.edu/abs/2014A%26A...570L...8B"],
+      ["Astronomy & Astrophysics (2025). Atmósfera de WISE 0855 vista con JWST/MIRI", "https://www.aanda.org/articles/aa/abs/2025/03/aa52547-24/aa52547-24.html"],
+      ["Exoplanet.eu. WISE J0855-0714", "https://exoplanet.eu/catalog/wise_j0855_0714--3930/"]
+    ]
+  },
+  {
+    titulo: "Epsilon Indi B, un par de enanas cafés", clave: "Epsilon Indi B", ra: 331.044, dec: -56.783,
+    guia: [
+      "Aquí no hay una, sino dos enanas cafés que giran una alrededor de la otra: Epsilon Indi Ba y Epsilon Indi Bb. Están a unos 11.9 años luz, en la constelación del Indio, y son de los objetos de este tipo más cercanos al Sol.",
+      "Fueron descubiertas en enero de 2003. Primero se vio un objeto tenue que se movía igual que la estrella Epsilon Indi A, y así se supo que viajaban juntas, unidas por la gravedad. Después se descubrió que ese objeto en realidad eran dos.",
+      "Las dos son diferentes: Ba está entre 1,300 y 1,340 K y Bb entre 880 y 940 K. En sus atmósferas hay metano y vapor de agua, propios de objetos mucho más fríos que una estrella.",
+      "Son un laboratorio natural para estudiar cómo se enfrían y cambian estos objetos, que están en el límite entre los planetas gigantes y las estrellas pequeñas."
+    ],
+    datos: [["11.9 años luz","distancia (3.64 pc)"],["2003","año de descubrimiento"],["1,300-1,340 K","temperatura de Ba (T1)"],["880-940 K","temperatura de Bb (T6)"],["Indio","constelación"]],
+    video: "videos/epsindi.gif",
+    pie: "Fotos de SPHEREx de distintas fechas alrededor de Epsilon Indi B.",
+    fuentes: [
+      ["King, R. R., et al. (2010). ε Indi Ba, Bb: a detailed study of the nearest known brown dwarfs. Astronomy & Astrophysics, 510, A99", "https://ui.adsabs.harvard.edu/abs/2010A%26A...510A..99K"],
+      ["McCaughrean, M. J., et al. (2004). El par de enanas cafés más cercano", "https://arxiv.org/abs/astro-ph/0309256"]
+    ]
+  },
+  {
+    titulo: "RW Aurigae, la estrella que se esconde", clave: "RW Aur", ra: 76.956, dec: 30.401,
+    guia: [
+      "RW Aurigae es un sistema de estrellas muy jóvenes, de unos 3 millones de años, en la región donde nacen estrellas de Tauro-Auriga. Está a unos 510 años luz.",
+      "Tiene dos estrellas principales, RW Aurigae A y B. Las dos son estrellas T Tauri: todavía están creciendo y jalan material del disco de gas y polvo que las rodea, el mismo material con el que se forman los planetas. RW Aurigae fue identificada como estrella T Tauri en 1945.",
+      "Lo más interesante es que su brillo cambia: baja mucho cuando nubes de polvo y gas pasan frente a la estrella. Desde 2010 se han visto oscurecimientos muy grandes, y estudiarlos nos dice qué materiales hay a su alrededor.",
+      "En este video no buscamos movimiento, sino cambios de brillo. Observa si la estrella del centro se ve más brillante o más débil de una fecha a otra."
+    ],
+    datos: [["~510 años luz","distancia (156 pc)"],["~3 millones de años","edad"],["~5,000 K","temperatura de RW Aur A"],["K1-K3","tipo espectral de A"],["Auriga","constelación"]],
+    video: "videos/rwaur.gif",
+    pie: "Fotos de SPHEREx con el mismo brillo de referencia en todas las fechas, para comparar.",
+    fuentes: [
+      ["Lux, O., Mugrauer, M. y Bischoff, R. (2024). The deep eclipses of RW Aur revisited by long-term photometric and spectroscopic monitoring. Astronomische Nachrichten, 345(4)", "https://arxiv.org/abs/2312.17598"],
+      ["Gaia DR3 (Vallenari et al., 2023), vía Wikipedia: RW Aurigae", "https://en.wikipedia.org/wiki/RW_Aurigae"],
+      ["Rodriguez, J. E., et al. (2016). The Astronomical Journal, 151, 29", "https://ui.adsabs.harvard.edu/abs/2016AJ....151...29R"]
+    ]
+  },
+  {
+    titulo: "R Draconis, la estrella que respira", clave: "R Dra", ra: 248.167, dec: 66.755,
+    guia: [
+      "R Draconis es una gigante roja en la constelación del Dragón. Es una variable tipo Mira: una estrella vieja que se hincha y se encoge, como si respirara.",
+      "Está en una etapa avanzada de su vida, llamada rama asintótica de las gigantes: ya gastó gran parte de su combustible y tiene una envoltura exterior enorme y relativamente fría.",
+      "Cada vez que respira, cambian su tamaño, su temperatura y su brillo: pasa de magnitud 6.7 a 13.2, unas 400 veces menos brillante, y repite el ciclo cada 246 días.",
+      "Además va perdiendo material hacia el espacio, y ese material ayudará a formar nuevas estrellas y planetas. Con fotos cada seis meses, SPHEREx la puede atrapar en distintos momentos de su respiración."
+    ],
+    datos: [["246 días","duración de su ciclo"],["6.7 a 13.2","rango de brillo (magnitud)"],["M4.5-M6e","tipo espectral"],["Variable Mira","gigante roja pulsante"],["Dragón","constelación"]],
+    video: "videos/rdra.gif",
+    pie: "Fotos de SPHEREx con el mismo brillo de referencia: compara qué tan brillante se ve en cada fecha.",
+    fuentes: [
+      ["SIMBAD Astronomical Database. Registro de R Dra", "https://simbad.cds.unistra.fr/simbad/sim-id?Ident=R+Dra"],
+      ["Wikipedia. Mira variable (tabla de estrellas, incluye R Draconis)", "https://en.wikipedia.org/wiki/Mira_variable"]
+    ]
+  },
+  {
+    titulo: "Ahora explora tú",
+    guia: [
+      "Este recorrido terminó, pero el cielo es enorme y SPHEREx lo fotografía completo.",
+      "En el planetario puedes mirar todo el cielo a tu alrededor. Y con nuestra herramienta puedes escribir cualquier nombre o coordenada y ver cómo ha cambiado ese pedazo de cielo con las fotos reales de la NASA.",
+      "Quizá encuentres algo que nadie ha visto todavía. Así se han descubierto muchos objetos: comparando fotos de distintas fechas."
+    ],
+    final: true, datos: [], video: null,
+    fuentes: [
+      ["Datos: SPHEREx en el NASA/IPAC Infrared Science Archive (IRSA)", "https://irsa.ipac.caltech.edu/Missions/spherex.html"],
+      ["Mapa del cielo: Aladin Lite (CDS, Estrasburgo)", "https://aladin.cds.unistra.fr/"],
+      ["Desafío: NASA Space Apps 2026, Planet X and SPHEREx", "https://www.spaceappschallenge.org/2026/challenges/planet-x-and-spherex/"],
+      ["Sonido ambiente: NASA Artemis Audio Library (uso libre según las guías de medios de NASA; NASA no respalda este proyecto)", "https://www.nasa.gov/artemisaudio"]
+    ]
+  }
+];
+
+// Traducciones de las salas del museo (titulo, guia, datos y pie del video) a los otros 9 idiomas.
+// Las referencias de 'Fuentes' se dejan en su idioma original, como se citan.
+const TRAD_SALAS = {"en": [{"t": "Welcome", "g": ["Hi, welcome. I'll be your guide in this museum of the moving sky.", "Since 2025, NASA's SPHEREx mission has been photographing the whole sky every six months in 102 colors of near-infrared light, recording hundreds of millions of galaxies and stars.", "Comets, asteroids, stars, brown dwarfs and even new planets can be discovered because they change position or brightness from one image to the next. But no single person can review that much information. That's why we made this museum: so you can look too.", "Go on to the next room to meet the telescope."]}, {"t": "SPHEREx, the sky photographer", "g": ["SPHEREx was launched into space on March 11, 2025, aboard a Falcon 9 rocket from California.", "Its superpower is that it photographs the entire sky, in every direction, about every six months. And it doesn't see it in just one color: it sees it in 102 colors of infrared light that our eyes cannot see.", "To do this it has six detectors, and each one splits light into 17 colors. Six times seventeen: 102 maps of the sky every time. Because it images the sky again and again, we can compare pictures from different dates and discover what changed."], "d": [["Mar 11, 2025", "launch"], ["102", "infrared colors"], ["~6 months", "to photograph the whole sky"], ["Dec 2025", "first complete map"]]}, {"t": "Barnard's Star", "g": ["Barnard's Star is a red dwarf and one of our closest neighbors: it is about 5.96 light-years away, in the constellation Ophiuchus.", "In 1916, astronomer Edward Emerson Barnard discovered its record: it is the star with the largest proper motion in the whole sky. It moves about 10 arcseconds each year against the background stars.", "It is much smaller, cooler and dimmer than our Sun: it has about 16% of the Sun's mass and its surface is at about 3,200 kelvin. Like other red dwarfs, it shines mostly in reddish and infrared light.", "Watch the video: while the other stars stay still, it changes place. And it is not alone: between 2024 and 2025, four small planets orbiting it were confirmed."], "d": [["5.96 light-years", "distance (1.83 pc)"], ["1916", "its motion discovered"], ["~3,200 K", "surface temperature"], ["M4 V", "red dwarf, GJ 699"], ["0.16", "solar masses"], ["4 planets", "confirmed in 2024-2025"]], "p": "SPHEREx images from different dates. The cross marks where the star is; watch how it moves."}, {"t": "WISE 0855, the coldest brown dwarf", "g": ["Now meet a strange object: WISE 0855−0714. It is neither a star nor a planet: it is a Y-type brown dwarf, an object with a planet-like mass that travels alone through space. It is about 7.4 light-years away, in the constellation Hydra.", "It was discovered in 2014 with NASA's WISE infrared telescope. It doesn't have enough mass to fuse hydrogen like a star, so it barely shines in visible light: it only gives off, in infrared, the heat left over from its formation.", "It is the coldest known object of its kind: between 225 and 260 K, that is, between 48 and 13 degrees Celsius below zero, as cold as the iciest places on Earth. Its atmosphere contains water and methane. It was thought it might have ice clouds, but the James Webb telescope has not found them.", "Studying it helps us understand the boundary between giant planets and the smallest stars. That's why infrared telescopes like SPHEREx are perfect for finding worlds like this."], "d": [["7.4 light-years", "distance (2.28 pc)"], ["2014", "year discovered"], ["225 to 260 K", "temperature (-48 to -13 °C)"], ["Type Y", "isolated brown dwarf"], ["Hydra", "constellation"]], "p": "SPHEREx images in its longest infrared band (detector D6), where this cold object shines brightest."}, {"t": "Epsilon Indi B, a pair of brown dwarfs", "g": ["Here there is not one but two brown dwarfs orbiting each other: Epsilon Indi Ba and Epsilon Indi Bb. They are about 11.9 light-years away, in the constellation Indus, and are among the closest objects of this kind to the Sun.", "They were discovered in January 2003. First, a faint object was seen moving exactly like the star Epsilon Indi A, which showed that they travel together, bound by gravity. Later it turned out that this object was actually two.", "The two are different: Ba is between 1,300 and 1,340 K and Bb between 880 and 940 K. Their atmospheres contain methane and water vapor, typical of objects much colder than a star.", "They are a natural laboratory for studying how these objects cool and change, at the boundary between giant planets and small stars."], "d": [["11.9 light-years", "distance (3.64 pc)"], ["2003", "year discovered"], ["1,300-1,340 K", "temperature of Ba (T1)"], ["880-940 K", "temperature of Bb (T6)"], ["Indus", "constellation"]], "p": "SPHEREx images from different dates around Epsilon Indi B."}, {"t": "RW Aurigae, the star that hides", "g": ["RW Aurigae is a system of very young stars, about 3 million years old, in the Taurus-Auriga star-forming region. It is about 510 light-years away.", "It has two main stars, RW Aurigae A and B. Both are T Tauri stars: they are still growing and pulling in material from the disk of gas and dust around them, the same material planets form from. RW Aurigae was identified as a T Tauri star in 1945.", "The most interesting thing is that its brightness changes: it drops sharply when clouds of dust and gas pass in front of the star. Very large dimmings have been seen since 2010, and studying them tells us what materials surround it.", "In this video we are not looking for motion, but for changes in brightness. Watch whether the central star looks brighter or fainter from one date to another."], "d": [["~510 light-years", "distance (156 pc)"], ["~3 million years", "age"], ["~5,000 K", "temperature of RW Aur A"], ["K1-K3", "spectral type of A"], ["Auriga", "constellation"]], "p": "SPHEREx images with the same reference brightness on every date, for comparison."}, {"t": "R Draconis, the breathing star", "g": ["R Draconis is a red giant in the constellation Draco, the Dragon. It is a Mira variable: an old star that swells and shrinks, as if it were breathing.", "It is in an advanced stage of its life called the asymptotic giant branch: it has used up much of its fuel and has a huge, relatively cool outer envelope.", "Each time it breathes, its size, temperature and brightness change: it goes from magnitude 6.7 to 13.2, about 400 times fainter, and repeats the cycle every 246 days.", "It is also losing material into space, and that material will help form new stars and planets. With images every six months, SPHEREx can catch it at different moments of its breathing."], "d": [["246 days", "length of its cycle"], ["6.7 to 13.2", "brightness range (magnitude)"], ["M4.5-M6e", "spectral type"], ["Mira variable", "pulsating red giant"], ["Draco", "constellation"]], "p": "SPHEREx images with the same reference brightness: compare how bright it looks on each date."}, {"t": "Now you explore", "g": ["This tour is over, but the sky is huge and SPHEREx photographs all of it.", "In the planetarium you can look at the whole sky around you. And with our tool you can type any name or coordinate and see how that patch of sky has changed in real NASA images.", "Maybe you will find something nobody has seen yet. That's how many objects have been discovered: by comparing images from different dates."]}], "fr": [{"t": "Bienvenue", "g": ["Bonjour et bienvenue. Je serai ton guide dans ce musée du ciel en mouvement.", "Depuis 2025, la mission SPHEREx de la NASA photographie tout le ciel tous les six mois dans 102 couleurs de lumière infrarouge proche, et enregistre des centaines de millions de galaxies et d'étoiles.", "Comètes, astéroïdes, étoiles, naines brunes et même de nouvelles planètes peuvent être découverts parce qu'ils changent de position ou d'éclat d'une image à l'autre. Mais personne ne peut examiner seul autant d'informations. C'est pour cela que nous avons créé ce musée : pour que toi aussi, tu puisses regarder.", "Passe à la salle suivante pour découvrir le télescope."]}, {"t": "SPHEREx, le photographe du ciel", "g": ["SPHEREx a été lancé dans l'espace le 11 mars 2025 à bord d'une fusée Falcon 9, depuis la Californie.", "Son super-pouvoir : il photographie le ciel entier, dans toutes les directions, environ tous les six mois. Et il ne le voit pas d'une seule couleur, mais en 102 couleurs de lumière infrarouge, invisibles pour nos yeux.", "Pour cela, il possède six détecteurs, et chacun sépare la lumière en 17 couleurs. Six fois dix-sept : 102 cartes du ciel à chaque fois. Comme il photographie le ciel encore et encore, nous pouvons comparer des images de dates différentes et découvrir ce qui a changé."], "d": [["11 mars 2025", "lancement"], ["102", "couleurs infrarouges"], ["~6 mois", "pour photographier tout le ciel"], ["Déc. 2025", "première carte complète"]]}, {"t": "L'étoile de Barnard", "g": ["L'étoile de Barnard est une naine rouge, l'une de nos plus proches voisines : elle se trouve à environ 5,96 années-lumière, dans la constellation d'Ophiuchus.", "En 1916, l'astronome Edward Emerson Barnard a découvert son record : c'est l'étoile au plus grand mouvement propre de tout le ciel. Elle avance d'environ 10 secondes d'arc par an par rapport aux étoiles de fond.", "Elle est bien plus petite, plus froide et plus pâle que notre Soleil : elle a environ 16 % de sa masse et sa surface est à environ 3 200 kelvins. Comme les autres naines rouges, elle brille surtout en lumière rougeâtre et infrarouge.", "Regarde la vidéo : pendant que les autres étoiles restent immobiles, elle change de place. Et elle n'est pas seule : entre 2024 et 2025, quatre petites planètes en orbite autour d'elle ont été confirmées."], "d": [["5,96 années-lumière", "distance (1,83 pc)"], ["1916", "découverte de son mouvement"], ["~3 200 K", "température de surface"], ["M4 V", "naine rouge, GJ 699"], ["0,16", "masse solaire"], ["4 planètes", "confirmées en 2024-2025"]], "p": "Images SPHEREx de différentes dates. La croix indique où se trouve l'étoile ; observe comment elle se déplace."}, {"t": "WISE 0855, la naine brune la plus froide", "g": ["Découvre maintenant un objet étrange : WISE 0855−0714. Ce n'est ni une étoile ni une planète : c'est une naine brune de type Y, un objet d'une masse comparable à celle d'une planète qui voyage seul dans l'espace. Elle se trouve à environ 7,4 années-lumière, dans la constellation de l'Hydre.", "Elle a été découverte en 2014 grâce au télescope infrarouge WISE de la NASA. Elle n'a pas assez de masse pour fusionner l'hydrogène comme une étoile ; elle brille donc à peine en lumière visible et émet seulement en infrarouge la chaleur restée depuis sa formation.", "C'est l'objet de ce type le plus froid connu : entre 225 et 260 K, soit entre 48 et 13 degrés Celsius sous zéro, aussi froid que les endroits les plus glacés de la Terre. Son atmosphère contient de l'eau et du méthane. On pensait qu'elle pouvait avoir des nuages de glace, mais le télescope James Webb n'en a pas trouvé.", "L'étudier nous aide à comprendre la frontière entre les planètes géantes et les plus petites étoiles. C'est pourquoi les télescopes infrarouges comme SPHEREx sont parfaits pour chercher de tels mondes."], "d": [["7,4 années-lumière", "distance (2,28 pc)"], ["2014", "année de découverte"], ["225 à 260 K", "température (-48 à -13 °C)"], ["Type Y", "naine brune isolée"], ["Hydre", "constellation"]], "p": "Images SPHEREx dans son infrarouge le plus long (détecteur D6), où cet objet froid brille le plus."}, {"t": "Epsilon Indi B, un couple de naines brunes", "g": ["Ici, il n'y a pas une mais deux naines brunes qui tournent l'une autour de l'autre : Epsilon Indi Ba et Epsilon Indi Bb. Elles se trouvent à environ 11,9 années-lumière, dans la constellation de l'Indien, et comptent parmi les objets de ce type les plus proches du Soleil.", "Elles ont été découvertes en janvier 2003. On a d'abord vu un objet pâle qui se déplaçait exactement comme l'étoile Epsilon Indi A, ce qui a montré qu'ils voyagent ensemble, liés par la gravité. On a ensuite découvert que cet objet était en réalité double.", "Les deux sont différentes : Ba est entre 1 300 et 1 340 K et Bb entre 880 et 940 K. Leurs atmosphères contiennent du méthane et de la vapeur d'eau, typiques d'objets bien plus froids qu'une étoile.", "Elles sont un laboratoire naturel pour étudier comment ces objets se refroidissent et évoluent, à la frontière entre les planètes géantes et les petites étoiles."], "d": [["11,9 années-lumière", "distance (3,64 pc)"], ["2003", "année de découverte"], ["1 300-1 340 K", "température de Ba (T1)"], ["880-940 K", "température de Bb (T6)"], ["Indien", "constellation"]], "p": "Images SPHEREx de différentes dates autour d'Epsilon Indi B."}, {"t": "RW Aurigae, l'étoile qui se cache", "g": ["RW Aurigae est un système d'étoiles très jeunes, d'environ 3 millions d'années, dans la région de formation d'étoiles du Taureau-Cocher. Il se trouve à environ 510 années-lumière.", "Il possède deux étoiles principales, RW Aurigae A et B. Ce sont des étoiles T Tauri : elles grandissent encore et attirent la matière du disque de gaz et de poussière qui les entoure, la même matière qui forme les planètes. RW Aurigae a été identifiée comme étoile T Tauri en 1945.", "Le plus intéressant, c'est que son éclat change : il baisse fortement quand des nuages de poussière et de gaz passent devant l'étoile. Depuis 2010, on a observé de très grands obscurcissements, et leur étude nous renseigne sur les matériaux qui l'entourent.", "Dans cette vidéo, on ne cherche pas un mouvement mais des changements d'éclat. Observe si l'étoile du centre paraît plus brillante ou plus faible d'une date à l'autre."], "d": [["~510 années-lumière", "distance (156 pc)"], ["~3 millions d'années", "âge"], ["~5 000 K", "température de RW Aur A"], ["K1-K3", "type spectral de A"], ["Cocher", "constellation"]], "p": "Images SPHEREx avec le même éclat de référence à chaque date, pour comparer."}, {"t": "R Draconis, l'étoile qui respire", "g": ["R Draconis est une géante rouge de la constellation du Dragon. C'est une variable de type Mira : une vieille étoile qui gonfle et se contracte, comme si elle respirait.", "Elle se trouve à un stade avancé de sa vie, appelé branche asymptotique des géantes : elle a déjà consommé une grande partie de son combustible et possède une énorme enveloppe extérieure, relativement froide.", "À chaque respiration, sa taille, sa température et son éclat changent : elle passe de la magnitude 6,7 à 13,2, environ 400 fois moins brillante, et répète le cycle tous les 246 jours.", "Elle perd aussi de la matière dans l'espace, et cette matière aidera à former de nouvelles étoiles et planètes. Avec des images tous les six mois, SPHEREx peut la surprendre à différents moments de sa respiration."], "d": [["246 jours", "durée de son cycle"], ["6,7 à 13,2", "variation d'éclat (magnitude)"], ["M4.5-M6e", "type spectral"], ["Variable Mira", "géante rouge pulsante"], ["Dragon", "constellation"]], "p": "Images SPHEREx avec le même éclat de référence : compare sa luminosité à chaque date."}, {"t": "À toi d'explorer", "g": ["Cette visite est terminée, mais le ciel est immense et SPHEREx le photographie en entier.", "Dans le planétarium, tu peux regarder tout le ciel autour de toi. Et avec notre outil, tu peux saisir n'importe quel nom ou coordonnée et voir comment ce coin de ciel a changé dans les vraies images de la NASA.", "Tu trouveras peut-être quelque chose que personne n'a encore vu. C'est ainsi que beaucoup d'objets ont été découverts : en comparant des images de dates différentes."]}], "pt": [{"t": "Boas-vindas", "g": ["Olá, bem-vindo. Eu serei seu guia neste museu do céu em movimento.", "Desde 2025, a missão SPHEREx da NASA fotografa todo o céu a cada seis meses em 102 cores de luz infravermelha próxima e registra centenas de milhões de galáxias e estrelas.", "Cometas, asteroides, estrelas, anãs marrons e até planetas novos podem ser descobertos porque mudam de posição ou de brilho de uma imagem para outra. Mas ninguém consegue revisar sozinho tanta informação. Por isso fizemos este museu: para que você também possa olhar.", "Passe para a próxima sala para conhecer o telescópio."]}, {"t": "SPHEREx, o fotógrafo do céu", "g": ["O SPHEREx foi lançado ao espaço em 11 de março de 2025, a bordo de um foguete Falcon 9, da Califórnia.", "Seu grande poder é fotografar o céu inteiro, em todas as direções, mais ou menos a cada seis meses. E ele não o vê em uma só cor: vê em 102 cores de luz infravermelha, que nossos olhos não conseguem ver.", "Para isso, ele tem seis detectores e cada um separa a luz em 17 cores. Seis vezes dezessete: 102 mapas do céu a cada vez. Como fotografa o céu de novo e de novo, podemos comparar imagens de datas diferentes e descobrir o que mudou."], "d": [["11 mar 2025", "lançamento"], ["102", "cores infravermelhas"], ["~6 meses", "para fotografar todo o céu"], ["Dez 2025", "primeiro mapa completo"]]}, {"t": "A Estrela de Barnard", "g": ["A Estrela de Barnard é uma anã vermelha, uma de nossas vizinhas mais próximas: está a cerca de 5,96 anos-luz, na constelação de Ofiúco.", "Em 1916, o astrônomo Edward Emerson Barnard descobriu seu recorde: é a estrela com o maior movimento próprio de todo o céu. Ela avança cerca de 10 segundos de arco por ano em relação às estrelas do fundo.", "É muito menor, mais fria e mais fraca que o nosso Sol: tem cerca de 16% da massa dele e sua superfície está a uns 3.200 kelvin. Como outras anãs vermelhas, brilha sobretudo em luz avermelhada e infravermelha.", "Veja o vídeo: enquanto as outras estrelas ficam paradas, ela muda de lugar. E ela não está sozinha: entre 2024 e 2025, foram confirmados quatro pequenos planetas girando ao seu redor."], "d": [["5,96 anos-luz", "distância (1,83 pc)"], ["1916", "descoberta do seu movimento"], ["~3.200 K", "temperatura da superfície"], ["M4 V", "anã vermelha, GJ 699"], ["0,16", "massas solares"], ["4 planetas", "confirmados em 2024-2025"]], "p": "Imagens do SPHEREx de datas diferentes. A cruz marca onde está a estrela; observe como ela se desloca."}, {"t": "WISE 0855, a anã marrom mais fria", "g": ["Agora conheça um objeto estranho: WISE 0855−0714. Não é uma estrela nem um planeta: é uma anã marrom do tipo Y, um objeto com massa parecida à de um planeta que viaja sozinho pelo espaço. Está a cerca de 7,4 anos-luz, na constelação de Hidra.", "Foi descoberta em 2014 com o telescópio infravermelho WISE da NASA. Não tem massa suficiente para fundir hidrogênio como uma estrela, por isso quase não brilha em luz visível: só emite no infravermelho o calor que restou desde a sua formação.", "É o objeto desse tipo mais frio que se conhece: entre 225 e 260 K, ou seja, entre 48 e 13 graus Celsius abaixo de zero, tão frio quanto os lugares mais gelados da Terra. Sua atmosfera tem água e metano. Pensava-se que poderia ter nuvens de gelo, mas o telescópio James Webb não as encontrou.", "Estudá-la nos ajuda a entender a fronteira entre os planetas gigantes e as menores estrelas. Por isso, telescópios infravermelhos como o SPHEREx são perfeitos para procurar mundos assim."], "d": [["7,4 anos-luz", "distância (2,28 pc)"], ["2014", "ano da descoberta"], ["225 a 260 K", "temperatura (-48 a -13 °C)"], ["Tipo Y", "anã marrom isolada"], ["Hidra", "constelação"]], "p": "Imagens do SPHEREx no seu infravermelho mais longo (detector D6), onde este objeto frio brilha mais."}, {"t": "Epsilon Indi B, um par de anãs marrons", "g": ["Aqui não há uma, mas duas anãs marrons girando uma em torno da outra: Epsilon Indi Ba e Epsilon Indi Bb. Estão a cerca de 11,9 anos-luz, na constelação do Índio, e estão entre os objetos desse tipo mais próximos do Sol.", "Foram descobertas em janeiro de 2003. Primeiro viu-se um objeto fraco que se movia exatamente como a estrela Epsilon Indi A, e assim se soube que viajam juntos, unidos pela gravidade. Depois descobriu-se que esse objeto, na verdade, eram dois.", "As duas são diferentes: Ba está entre 1.300 e 1.340 K e Bb entre 880 e 940 K. Em suas atmosferas há metano e vapor de água, típicos de objetos muito mais frios que uma estrela.", "Elas são um laboratório natural para estudar como esses objetos esfriam e mudam, no limite entre os planetas gigantes e as estrelas pequenas."], "d": [["11,9 anos-luz", "distância (3,64 pc)"], ["2003", "ano da descoberta"], ["1.300-1.340 K", "temperatura de Ba (T1)"], ["880-940 K", "temperatura de Bb (T6)"], ["Índio", "constelação"]], "p": "Imagens do SPHEREx de datas diferentes ao redor de Epsilon Indi B."}, {"t": "RW Aurigae, a estrela que se esconde", "g": ["RW Aurigae é um sistema de estrelas muito jovens, com cerca de 3 milhões de anos, na região de formação de estrelas de Touro-Cocheiro. Está a cerca de 510 anos-luz.", "Tem duas estrelas principais, RW Aurigae A e B. Ambas são estrelas T Tauri: ainda estão crescendo e puxam material do disco de gás e poeira que as rodeia, o mesmo material com que se formam os planetas. RW Aurigae foi identificada como estrela T Tauri em 1945.", "O mais interessante é que seu brilho muda: cai muito quando nuvens de poeira e gás passam na frente da estrela. Desde 2010 foram vistos escurecimentos muito grandes, e estudá-los nos diz quais materiais existem ao seu redor.", "Neste vídeo não procuramos movimento, mas mudanças de brilho. Observe se a estrela do centro parece mais brilhante ou mais fraca de uma data para outra."], "d": [["~510 anos-luz", "distância (156 pc)"], ["~3 milhões de anos", "idade"], ["~5.000 K", "temperatura de RW Aur A"], ["K1-K3", "tipo espectral de A"], ["Cocheiro", "constelação"]], "p": "Imagens do SPHEREx com o mesmo brilho de referência em todas as datas, para comparar."}, {"t": "R Draconis, a estrela que respira", "g": ["R Draconis é uma gigante vermelha na constelação do Dragão. É uma variável do tipo Mira: uma estrela velha que incha e encolhe, como se respirasse.", "Está numa etapa avançada da vida, chamada ramo assintótico das gigantes: já gastou grande parte do seu combustível e tem um envelope externo enorme e relativamente frio.", "A cada respiração, mudam seu tamanho, sua temperatura e seu brilho: passa da magnitude 6,7 para 13,2, cerca de 400 vezes menos brilhante, e repete o ciclo a cada 246 dias.", "Além disso, ela vai perdendo material para o espaço, e esse material ajudará a formar novas estrelas e planetas. Com imagens a cada seis meses, o SPHEREx pode flagrá-la em diferentes momentos da sua respiração."], "d": [["246 dias", "duração do seu ciclo"], ["6,7 a 13,2", "variação de brilho (magnitude)"], ["M4.5-M6e", "tipo espectral"], ["Variável Mira", "gigante vermelha pulsante"], ["Dragão", "constelação"]], "p": "Imagens do SPHEREx com o mesmo brilho de referência: compare quão brilhante ela parece em cada data."}, {"t": "Agora explore você", "g": ["Este passeio terminou, mas o céu é enorme e o SPHEREx o fotografa por inteiro.", "No planetário você pode olhar todo o céu ao seu redor. E com a nossa ferramenta você pode digitar qualquer nome ou coordenada e ver como aquele pedaço do céu mudou nas imagens reais da NASA.", "Talvez você encontre algo que ninguém viu ainda. Foi assim que muitos objetos foram descobertos: comparando imagens de datas diferentes."]}], "de": [{"t": "Willkommen", "g": ["Hallo und willkommen. Ich bin dein Guide in diesem Museum des bewegten Himmels.", "Seit 2025 fotografiert die NASA-Mission SPHEREx alle sechs Monate den ganzen Himmel in 102 Farben nahen Infrarotlichts und erfasst dabei Hunderte Millionen Galaxien und Sterne.", "Kometen, Asteroiden, Sterne, Braune Zwerge und sogar neue Planeten lassen sich entdecken, weil sie von einem Bild zum nächsten ihre Position oder Helligkeit ändern. Doch kein Mensch kann so viele Daten allein durchsehen. Deshalb haben wir dieses Museum gemacht: damit auch du hinschauen kannst.", "Geh weiter in den nächsten Raum, um das Teleskop kennenzulernen."]}, {"t": "SPHEREx, der Fotograf des Himmels", "g": ["SPHEREx startete am 11. März 2025 an Bord einer Falcon-9-Rakete von Kalifornien aus ins All.", "Seine Superkraft: Es fotografiert etwa alle sechs Monate den gesamten Himmel in alle Richtungen. Und es sieht ihn nicht nur in einer Farbe, sondern in 102 Farben infraroten Lichts, die unsere Augen nicht sehen können.", "Dafür hat es sechs Detektoren, und jeder zerlegt das Licht in 17 Farben. Sechs mal siebzehn: jedes Mal 102 Himmelskarten. Weil es den Himmel immer wieder aufnimmt, können wir Bilder verschiedener Daten vergleichen und entdecken, was sich verändert hat."], "d": [["11. März 2025", "Start"], ["102", "Infrarotfarben"], ["~6 Monate", "für den ganzen Himmel"], ["Dez. 2025", "erste vollständige Karte"]]}, {"t": "Barnards Pfeilstern", "g": ["Barnards Pfeilstern ist ein Roter Zwerg und einer unserer nächsten Nachbarn: Er ist etwa 5,96 Lichtjahre entfernt, im Sternbild Schlangenträger.", "1916 entdeckte der Astronom Edward Emerson Barnard seinen Rekord: Er ist der Stern mit der größten Eigenbewegung am ganzen Himmel. Er wandert jedes Jahr etwa 10 Bogensekunden gegenüber den Hintergrundsternen.", "Er ist viel kleiner, kühler und lichtschwächer als unsere Sonne: Er hat etwa 16 % ihrer Masse, und seine Oberfläche hat etwa 3.200 Kelvin. Wie andere Rote Zwerge leuchtet er vor allem in rötlichem und infrarotem Licht.", "Sieh dir das Video an: Während die anderen Sterne stillstehen, wechselt er seinen Platz. Und er ist nicht allein: 2024 und 2025 wurden vier kleine Planeten bestätigt, die ihn umkreisen."], "d": [["5,96 Lichtjahre", "Entfernung (1,83 pc)"], ["1916", "Bewegung entdeckt"], ["~3.200 K", "Oberflächentemperatur"], ["M4 V", "Roter Zwerg, GJ 699"], ["0,16", "Sonnenmassen"], ["4 Planeten", "bestätigt 2024-2025"]], "p": "SPHEREx-Bilder von verschiedenen Daten. Das Kreuz zeigt, wo der Stern ist; achte darauf, wie er sich bewegt."}, {"t": "WISE 0855, der kälteste Braune Zwerg", "g": ["Lerne nun ein seltsames Objekt kennen: WISE 0855−0714. Es ist weder Stern noch Planet, sondern ein Brauner Zwerg vom Typ Y, ein Objekt mit planetenähnlicher Masse, das allein durchs All zieht. Es ist etwa 7,4 Lichtjahre entfernt, im Sternbild Wasserschlange.", "Es wurde 2014 mit dem Infrarotteleskop WISE der NASA entdeckt. Es hat nicht genug Masse, um wie ein Stern Wasserstoff zu fusionieren, daher leuchtet es im sichtbaren Licht kaum: Es gibt nur im Infraroten die Wärme ab, die ihm seit seiner Entstehung geblieben ist.", "Es ist das kälteste bekannte Objekt seiner Art: zwischen 225 und 260 K, also zwischen 48 und 13 Grad Celsius unter null, so kalt wie die eisigsten Orte der Erde. Seine Atmosphäre enthält Wasser und Methan. Man vermutete Eiswolken, doch das James-Webb-Teleskop hat keine gefunden.", "Seine Erforschung hilft uns, die Grenze zwischen Riesenplaneten und den kleinsten Sternen zu verstehen. Deshalb sind Infrarotteleskope wie SPHEREx ideal, um solche Welten zu suchen."], "d": [["7,4 Lichtjahre", "Entfernung (2,28 pc)"], ["2014", "Entdeckungsjahr"], ["225 bis 260 K", "Temperatur (-48 bis -13 °C)"], ["Typ Y", "einzelner Brauner Zwerg"], ["Wasserschlange", "Sternbild"]], "p": "SPHEREx-Bilder in seinem langwelligsten Infrarot (Detektor D6), wo dieses kalte Objekt am hellsten ist."}, {"t": "Epsilon Indi B, ein Paar Brauner Zwerge", "g": ["Hier gibt es nicht einen, sondern zwei Braune Zwerge, die einander umkreisen: Epsilon Indi Ba und Epsilon Indi Bb. Sie sind etwa 11,9 Lichtjahre entfernt, im Sternbild Inder, und gehören zu den sonnennächsten Objekten dieser Art.", "Sie wurden im Januar 2003 entdeckt. Zuerst sah man ein lichtschwaches Objekt, das sich genau wie der Stern Epsilon Indi A bewegte; so wurde klar, dass beide gemeinsam reisen, durch die Schwerkraft verbunden. Später zeigte sich, dass dieses Objekt in Wirklichkeit zwei waren.", "Die beiden sind verschieden: Ba hat 1.300 bis 1.340 K und Bb 880 bis 940 K. Ihre Atmosphären enthalten Methan und Wasserdampf, typisch für Objekte, die viel kälter sind als ein Stern.", "Sie sind ein natürliches Labor, um zu untersuchen, wie solche Objekte abkühlen und sich verändern, an der Grenze zwischen Riesenplaneten und kleinen Sternen."], "d": [["11,9 Lichtjahre", "Entfernung (3,64 pc)"], ["2003", "Entdeckungsjahr"], ["1.300-1.340 K", "Temperatur von Ba (T1)"], ["880-940 K", "Temperatur von Bb (T6)"], ["Inder", "Sternbild"]], "p": "SPHEREx-Bilder von verschiedenen Daten rund um Epsilon Indi B."}, {"t": "RW Aurigae, der Stern, der sich versteckt", "g": ["RW Aurigae ist ein System sehr junger Sterne, etwa 3 Millionen Jahre alt, in der Sternentstehungsregion Taurus-Auriga. Es ist etwa 510 Lichtjahre entfernt.", "Es hat zwei Hauptsterne, RW Aurigae A und B. Beide sind T-Tauri-Sterne: Sie wachsen noch und ziehen Material aus der Scheibe aus Gas und Staub um sie herum an, demselben Material, aus dem Planeten entstehen. RW Aurigae wurde 1945 als T-Tauri-Stern erkannt.", "Das Spannendste ist, dass sich seine Helligkeit ändert: Sie sinkt stark, wenn Staub- und Gaswolken vor dem Stern vorbeiziehen. Seit 2010 wurden sehr große Verdunkelungen beobachtet, und ihre Untersuchung verrät uns, welche Stoffe ihn umgeben.", "In diesem Video suchen wir keine Bewegung, sondern Helligkeitsänderungen. Achte darauf, ob der Stern in der Mitte von Datum zu Datum heller oder schwächer aussieht."], "d": [["~510 Lichtjahre", "Entfernung (156 pc)"], ["~3 Millionen Jahre", "Alter"], ["~5.000 K", "Temperatur von RW Aur A"], ["K1-K3", "Spektraltyp von A"], ["Fuhrmann", "Sternbild"]], "p": "SPHEREx-Bilder mit derselben Referenzhelligkeit an jedem Datum, zum Vergleichen."}, {"t": "R Draconis, der atmende Stern", "g": ["R Draconis ist ein Roter Riese im Sternbild Drache. Er ist ein Mira-Veränderlicher: ein alter Stern, der sich aufbläht und zusammenzieht, als würde er atmen.", "Er befindet sich in einer späten Lebensphase, dem asymptotischen Riesenast: Er hat schon einen Großteil seines Brennstoffs verbraucht und besitzt eine riesige, relativ kühle äußere Hülle.", "Mit jedem Atemzug ändern sich Größe, Temperatur und Helligkeit: Er wechselt von Größenklasse 6,7 zu 13,2, etwa 400-mal schwächer, und wiederholt den Zyklus alle 246 Tage.", "Außerdem verliert er Material ans All, und dieses Material wird helfen, neue Sterne und Planeten zu bilden. Mit Bildern alle sechs Monate kann SPHEREx ihn in verschiedenen Momenten seines Atmens erwischen."], "d": [["246 Tage", "Dauer seines Zyklus"], ["6,7 bis 13,2", "Helligkeitsbereich (Größenklasse)"], ["M4.5-M6e", "Spektraltyp"], ["Mira-Veränderlicher", "pulsierender Roter Riese"], ["Drache", "Sternbild"]], "p": "SPHEREx-Bilder mit derselben Referenzhelligkeit: Vergleiche, wie hell er an jedem Datum aussieht."}, {"t": "Jetzt erkundest du", "g": ["Diese Führung ist zu Ende, aber der Himmel ist riesig, und SPHEREx fotografiert ihn ganz.", "Im Planetarium kannst du den ganzen Himmel um dich herum betrachten. Und mit unserem Werkzeug kannst du einen beliebigen Namen oder eine Koordinate eingeben und sehen, wie sich dieses Stück Himmel in echten NASA-Bildern verändert hat.", "Vielleicht findest du etwas, das noch niemand gesehen hat. So wurden viele Objekte entdeckt: durch den Vergleich von Bildern verschiedener Daten."]}], "ko": [{"t": "환영합니다", "g": ["안녕하세요, 환영합니다. 저는 움직이는 하늘 박물관의 안내자예요.", "2025년부터 NASA의 SPHEREx 임무는 6개월마다 102가지 색의 근적외선으로 하늘 전체를 촬영하며, 수억 개의 은하와 별을 기록하고 있어요.", "혜성, 소행성, 별, 갈색왜성, 그리고 새로운 행성까지도 사진마다 위치나 밝기가 달라지기 때문에 발견할 수 있어요. 하지만 그렇게 많은 정보를 혼자 살펴볼 수 있는 사람은 없어요. 그래서 여러분도 함께 볼 수 있도록 이 박물관을 만들었어요.", "다음 전시실로 가서 망원경을 만나 보세요."]}, {"t": "SPHEREx, 하늘의 사진가", "g": ["SPHEREx는 2025년 3월 11일 캘리포니아에서 팰컨 9 로켓에 실려 우주로 발사되었어요.", "SPHEREx의 초능력은 약 6개월마다 모든 방향의 하늘 전체를 촬영한다는 거예요. 그리고 한 가지 색이 아니라, 우리 눈으로는 볼 수 없는 102가지 색의 적외선으로 하늘을 봐요.", "이를 위해 검출기 6개가 있고, 각각 빛을 17가지 색으로 나눠요. 6 곱하기 17, 매번 102장의 하늘 지도가 생겨요. 하늘을 계속 반복해서 찍기 때문에 서로 다른 날짜의 사진을 비교해 무엇이 바뀌었는지 찾을 수 있어요."], "d": [["2025년 3월 11일", "발사"], ["102", "적외선 색"], ["약 6개월", "하늘 전체 촬영 주기"], ["2025년 12월", "첫 전체 지도"]]}, {"t": "바너드 별", "g": ["바너드 별은 적색왜성으로, 우리와 가장 가까운 이웃 중 하나예요. 땅꾼자리에 있으며 약 5.96광년 떨어져 있어요.", "1916년 천문학자 에드워드 에머슨 바너드가 이 별의 기록을 발견했어요. 하늘 전체에서 고유운동이 가장 큰 별이에요. 배경 별들에 비해 해마다 약 10각초씩 움직여요.", "우리 태양보다 훨씬 작고, 차갑고, 어두워요. 질량은 태양의 약 16%이고 표면 온도는 약 3,200켈빈이에요. 다른 적색왜성처럼 주로 붉은빛과 적외선으로 빛나요.", "영상을 보세요. 다른 별들은 가만히 있는데 이 별은 자리를 옮겨요. 그리고 혼자가 아니에요. 2024년과 2025년에 이 별을 도는 작은 행성 4개가 확인되었어요."], "d": [["5.96광년", "거리 (1.83 pc)"], ["1916", "움직임 발견"], ["약 3,200 K", "표면 온도"], ["M4 V", "적색왜성, GJ 699"], ["0.16", "태양 질량"], ["행성 4개", "2024-2025년 확인"]], "p": "서로 다른 날짜의 SPHEREx 사진이에요. 십자 표시가 별의 위치예요. 별이 어떻게 움직이는지 보세요."}, {"t": "WISE 0855, 가장 차가운 갈색왜성", "g": ["이번엔 신기한 천체를 만나 볼까요? WISE 0855−0714예요. 별도 행성도 아닌 Y형 갈색왜성으로, 행성과 비슷한 질량을 가지고 우주를 홀로 떠도는 천체예요. 바다뱀자리에 있으며 약 7.4광년 떨어져 있어요.", "2014년 NASA의 적외선 망원경 WISE로 발견되었어요. 별처럼 수소 핵융합을 할 만큼 질량이 크지 않아서 가시광선으로는 거의 빛나지 않아요. 만들어질 때 남은 열을 적외선으로만 내보내요.", "이런 종류 중 알려진 가장 차가운 천체예요. 225~260K, 즉 영하 48도에서 영하 13도 사이로, 지구에서 가장 추운 곳만큼 차가워요. 대기에는 물과 메탄이 있어요. 얼음 구름이 있을 거라고 생각했지만, 제임스 웹 망원경은 그런 구름을 찾지 못했어요.", "이 천체를 연구하면 거대 행성과 가장 작은 별 사이의 경계를 이해할 수 있어요. 그래서 SPHEREx 같은 적외선 망원경은 이런 세계를 찾기에 딱 알맞아요."], "d": [["7.4광년", "거리 (2.28 pc)"], ["2014", "발견 연도"], ["225~260 K", "온도 (-48~-13 °C)"], ["Y형", "홀로 떠도는 갈색왜성"], ["바다뱀자리", "별자리"]], "p": "SPHEREx의 가장 긴 적외선 파장(검출기 D6) 사진이에요. 이 차가운 천체가 가장 밝게 보여요."}, {"t": "인디언자리 엡실론 B, 갈색왜성 한 쌍", "g": ["여기에는 하나가 아니라 두 개의 갈색왜성이 서로를 돌고 있어요. 인디언자리 엡실론 Ba와 Bb예요. 인디언자리에 있으며 약 11.9광년 떨어져 있고, 태양에서 가장 가까운 이런 종류의 천체 중 하나예요.", "2003년 1월에 발견되었어요. 처음엔 인디언자리 엡실론 A 별과 똑같이 움직이는 희미한 천체가 보였고, 그래서 둘이 중력으로 묶여 함께 움직인다는 것을 알게 되었어요. 나중에 그 천체가 사실은 둘이라는 것이 밝혀졌어요.", "둘은 서로 달라요. Ba는 1,300~1,340K, Bb는 880~940K예요. 대기에는 메탄과 수증기가 있는데, 별보다 훨씬 차가운 천체의 특징이에요.", "거대 행성과 작은 별의 경계에 있는 이런 천체가 어떻게 식고 변하는지 연구할 수 있는 자연 실험실이에요."], "d": [["11.9광년", "거리 (3.64 pc)"], ["2003", "발견 연도"], ["1,300-1,340 K", "Ba의 온도 (T1)"], ["880-940 K", "Bb의 온도 (T6)"], ["인디언자리", "별자리"]], "p": "인디언자리 엡실론 B 주변을 서로 다른 날짜에 찍은 SPHEREx 사진이에요."}, {"t": "마차부자리 RW, 숨는 별", "g": ["마차부자리 RW는 약 300만 년 된 아주 젊은 별들의 계로, 황소자리-마차부자리 별 탄생 지역에 있어요. 약 510광년 떨어져 있어요.", "주요 별은 RW A와 RW B 두 개예요. 둘 다 황소자리 T형 별로, 아직 자라는 중이며 주변의 가스와 먼지 원반에서 물질을 끌어들여요. 행성이 만들어지는 바로 그 물질이에요. 마차부자리 RW는 1945년에 황소자리 T형 별로 확인되었어요.", "가장 흥미로운 점은 밝기가 변한다는 거예요. 먼지와 가스 구름이 별 앞을 지나가면 크게 어두워져요. 2010년부터 아주 큰 어두워짐이 관측되었고, 이를 연구하면 주변에 어떤 물질이 있는지 알 수 있어요.", "이 영상에서는 움직임이 아니라 밝기 변화를 찾아요. 가운데 별이 날짜에 따라 더 밝게 또는 더 어둡게 보이는지 살펴보세요."], "d": [["약 510광년", "거리 (156 pc)"], ["약 300만 년", "나이"], ["약 5,000 K", "RW Aur A의 온도"], ["K1-K3", "A의 분광형"], ["마차부자리", "별자리"]], "p": "모든 날짜에 같은 기준 밝기를 적용한 SPHEREx 사진이에요. 비교해 보세요."}, {"t": "용자리 R, 숨 쉬는 별", "g": ["용자리 R은 용자리에 있는 적색거성이에요. 미라형 변광성으로, 마치 숨을 쉬듯 부풀었다 줄어드는 늙은 별이에요.", "점근거성가지라고 부르는 생애 후반 단계에 있어요. 연료를 이미 많이 써 버렸고, 거대하고 비교적 차가운 바깥층을 가지고 있어요.", "숨을 쉴 때마다 크기, 온도, 밝기가 바뀌어요. 6.7등급에서 13.2등급까지, 약 400배 어두워졌다가 246일마다 이 주기를 반복해요.", "또 우주로 물질을 잃고 있는데, 그 물질은 새로운 별과 행성을 만드는 데 쓰일 거예요. 6개월마다 찍는 사진으로 SPHEREx는 이 별의 숨쉬기를 여러 순간에 포착할 수 있어요."], "d": [["246일", "주기 길이"], ["6.7~13.2", "밝기 범위 (등급)"], ["M4.5-M6e", "분광형"], ["미라형 변광성", "맥동하는 적색거성"], ["용자리", "별자리"]], "p": "같은 기준 밝기를 적용한 SPHEREx 사진이에요. 날짜마다 얼마나 밝은지 비교해 보세요."}, {"t": "이제 직접 탐험해 보세요", "g": ["관람은 끝났지만 하늘은 아주 넓고, SPHEREx는 그 전체를 촬영해요.", "천체투영관에서는 주변 하늘 전체를 둘러볼 수 있어요. 그리고 우리 도구에 아무 이름이나 좌표를 입력하면, 그 하늘이 실제 NASA 사진에서 어떻게 변했는지 볼 수 있어요.", "어쩌면 아직 아무도 보지 못한 것을 발견할지도 몰라요. 많은 천체가 그렇게 발견되었어요. 서로 다른 날짜의 사진을 비교해서요."]}], "zh": [{"t": "欢迎", "g": ["你好，欢迎！我是这座“运动中的天空”博物馆的向导。", "自 2025 年起，NASA 的 SPHEREx 任务每六个月就用 102 种近红外颜色拍摄一次全天，记录了数亿个星系和恒星。", "彗星、小行星、恒星、褐矮星，甚至新的行星，都可以通过它们在不同照片之间位置或亮度的变化被发现。但没有人能独自查看这么多信息。所以我们建了这座博物馆：让你也能一起看。", "请前往下一个展厅，认识这台望远镜。"]}, {"t": "SPHEREx，天空摄影师", "g": ["SPHEREx 于 2025 年 3 月 11 日搭乘猎鹰 9 号火箭从加利福尼亚发射升空。", "它的超能力是大约每六个月就把整个天空、所有方向都拍摄一遍。而且它看到的不只是一种颜色，而是 102 种我们眼睛看不见的红外颜色。", "为此它有六个探测器，每个把光分成 17 种颜色。六乘十七：每次得到 102 张天空地图。因为它一次又一次地拍摄天空，我们可以比较不同日期的照片，发现哪里发生了变化。"], "d": [["2025年3月11日", "发射"], ["102", "种红外颜色"], ["约6个月", "拍完整个天空"], ["2025年12月", "首张完整天图"]]}, {"t": "巴纳德星", "g": ["巴纳德星是一颗红矮星，也是离我们最近的邻居之一：它位于蛇夫座，距离约 5.96 光年。", "1916 年，天文学家爱德华·埃默森·巴纳德发现了它的纪录：它是全天自行最大的恒星，相对于背景恒星每年移动约 10 角秒。", "它比太阳小得多、冷得多、暗得多：质量约为太阳的 16%，表面温度约 3,200 开尔文。和其他红矮星一样，它主要发出偏红的光和红外线。", "看看视频：其他恒星都静止不动，它却在移动位置。而且它并不孤单：2024 年至 2025 年间，天文学家确认了四颗绕它运行的小行星。"], "d": [["5.96 光年", "距离（1.83 pc）"], ["1916", "发现其运动"], ["约 3,200 K", "表面温度"], ["M4 V", "红矮星，GJ 699"], ["0.16", "太阳质量"], ["4 颗行星", "2024-2025 年确认"]], "p": "SPHEREx 在不同日期拍摄的照片。十字标出恒星的位置，注意看它如何移动。"}, {"t": "WISE 0855，最冷的褐矮星", "g": ["现在来认识一个奇特的天体：WISE 0855−0714。它既不是恒星也不是行星，而是一颗 Y 型褐矮星——质量与行星相近、在太空中独自游荡的天体。它位于长蛇座，距离约 7.4 光年。", "它于 2014 年由 NASA 的 WISE 红外望远镜发现。它的质量不足以像恒星那样进行氢聚变，所以在可见光下几乎不发光，只以红外线释放形成时残留的热量。", "它是已知同类中最冷的天体：温度在 225 到 260 K 之间，也就是零下 48 到零下 13 摄氏度，和地球上最冷的地方差不多。它的大气中有水和甲烷。人们曾以为它可能有冰云，但詹姆斯·韦布望远镜并没有找到。", "研究它能帮助我们理解巨行星与最小恒星之间的界限。所以像 SPHEREx 这样的红外望远镜非常适合寻找这样的世界。"], "d": [["7.4 光年", "距离（2.28 pc）"], ["2014", "发现年份"], ["225 至 260 K", "温度（-48 至 -13 °C）"], ["Y 型", "孤立的褐矮星"], ["长蛇座", "星座"]], "p": "SPHEREx 在最长红外波段（D6 探测器）拍摄的照片，这个寒冷天体在这里最亮。"}, {"t": "印第安座 ε B，一对褐矮星", "g": ["这里不是一颗，而是两颗互相绕转的褐矮星：印第安座 ε Ba 和 ε Bb。它们位于印第安座，距离约 11.9 光年，是离太阳最近的同类天体之一。", "它们在 2003 年 1 月被发现。起初人们看到一个暗弱的天体，与恒星印第安座 ε A 的运动完全一致，由此知道它们受引力束缚、一起运动。后来又发现，这个天体其实是两个。", "两者并不相同：Ba 的温度在 1,300 到 1,340 K 之间，Bb 在 880 到 940 K 之间。它们的大气中有甲烷和水蒸气，这是比恒星冷得多的天体的特征。", "它们是一座天然实验室，可以研究这类处在巨行星和小恒星边界上的天体如何冷却和演化。"], "d": [["11.9 光年", "距离（3.64 pc）"], ["2003", "发现年份"], ["1,300-1,340 K", "Ba 的温度（T1）"], ["880-940 K", "Bb 的温度（T6）"], ["印第安座", "星座"]], "p": "SPHEREx 在不同日期拍摄的印第安座 ε B 周围的照片。"}, {"t": "御夫座 RW，会躲藏的恒星", "g": ["御夫座 RW 是一个由非常年轻的恒星组成的系统，年龄约 300 万年，位于金牛-御夫恒星形成区，距离约 510 光年。", "它有两颗主要恒星：御夫座 RW A 和 B。它们都是金牛座 T 型星：仍在成长，并从周围的气体和尘埃盘中吸积物质——这正是形成行星的物质。御夫座 RW 在 1945 年被确认为金牛座 T 型星。", "最有趣的是它的亮度会变化：当尘埃和气体云从恒星前方经过时，亮度会大幅下降。自 2010 年以来观测到了非常大的变暗事件，研究它们能告诉我们它周围有哪些物质。", "在这个视频里，我们找的不是运动，而是亮度变化。看看中间的恒星在不同日期是变亮还是变暗。"], "d": [["约 510 光年", "距离（156 pc）"], ["约 300 万年", "年龄"], ["约 5,000 K", "RW Aur A 的温度"], ["K1-K3", "A 的光谱型"], ["御夫座", "星座"]], "p": "每个日期都使用相同参考亮度的 SPHEREx 照片，便于比较。"}, {"t": "天龙座 R，会呼吸的恒星", "g": ["天龙座 R 是天龙座中的一颗红巨星。它是一颗刍藁型变星：一颗会膨胀又收缩、仿佛在呼吸的老年恒星。", "它处在生命的晚期阶段，叫作渐近巨星支：它已经耗尽了大部分燃料，拥有巨大而相对寒冷的外层包层。", "每次“呼吸”，它的大小、温度和亮度都会改变：从 6.7 等变到 13.2 等，暗了约 400 倍，并且每 246 天重复一次。", "它还在不断向太空流失物质，这些物质将帮助形成新的恒星和行星。SPHEREx 每六个月拍摄一次，可以在它“呼吸”的不同时刻捕捉到它。"], "d": [["246 天", "周期长度"], ["6.7 至 13.2", "亮度范围（星等）"], ["M4.5-M6e", "光谱型"], ["刍藁型变星", "脉动红巨星"], ["天龙座", "星座"]], "p": "使用相同参考亮度的 SPHEREx 照片：比较它在每个日期有多亮。"}, {"t": "现在轮到你探索", "g": ["参观到此结束，但天空无比辽阔，而 SPHEREx 会把它全部拍下来。", "在天象厅里，你可以看到周围的整个天空。用我们的工具，你可以输入任何名称或坐标，看看那片天空在 NASA 的真实照片中有什么变化。", "也许你会发现一些从未有人见过的东西。许多天体正是这样被发现的：比较不同日期的照片。"]}], "th": [{"t": "ยินดีต้อนรับ", "g": ["สวัสดีและยินดีต้อนรับ ฉันจะเป็นไกด์ของคุณในพิพิธภัณฑ์ท้องฟ้าที่เคลื่อนไหวแห่งนี้", "ตั้งแต่ปี 2025 ภารกิจ SPHEREx ของ NASA ถ่ายภาพท้องฟ้าทั้งหมดทุก ๆ หกเดือนด้วยแสงอินฟราเรดใกล้ 102 สี และบันทึกกาแล็กซีและดาวฤกษ์หลายร้อยล้านดวง", "ดาวหาง ดาวเคราะห์น้อย ดาวฤกษ์ ดาวแคระน้ำตาล และแม้แต่ดาวเคราะห์ดวงใหม่ สามารถค้นพบได้เพราะตำแหน่งหรือความสว่างของมันเปลี่ยนไปจากภาพหนึ่งไปอีกภาพหนึ่ง แต่ไม่มีใครตรวจดูข้อมูลมากมายขนาดนี้ได้คนเดียว เราจึงสร้างพิพิธภัณฑ์นี้ขึ้นมา เพื่อให้คุณได้ช่วยกันดูด้วย", "ไปที่ห้องถัดไปเพื่อรู้จักกล้องโทรทรรศน์กันเลย"]}, {"t": "SPHEREx ช่างภาพแห่งท้องฟ้า", "g": ["SPHEREx ถูกส่งขึ้นสู่อวกาศเมื่อวันที่ 11 มีนาคม 2025 ด้วยจรวด Falcon 9 จากรัฐแคลิฟอร์เนีย", "พลังพิเศษของมันคือการถ่ายภาพท้องฟ้าทั้งหมดในทุกทิศทาง ประมาณทุก ๆ หกเดือน และไม่ได้เห็นเพียงสีเดียว แต่เห็นถึง 102 สีของแสงอินฟราเรดที่ตาเรามองไม่เห็น", "มันมีเครื่องตรวจจับหกตัว แต่ละตัวแยกแสงออกเป็น 17 สี หกคูณสิบเจ็ด ได้แผนที่ท้องฟ้า 102 แผ่นทุกครั้ง เพราะมันถ่ายท้องฟ้าซ้ำแล้วซ้ำเล่า เราจึงเปรียบเทียบภาพจากวันที่ต่างกันและค้นหาสิ่งที่เปลี่ยนไปได้"], "d": [["11 มี.ค. 2025", "วันปล่อย"], ["102", "สีอินฟราเรด"], ["~6 เดือน", "เพื่อถ่ายท้องฟ้าทั้งหมด"], ["ธ.ค. 2025", "แผนที่ฉบับสมบูรณ์แรก"]]}, {"t": "ดาวของบาร์นาร์ด", "g": ["ดาวของบาร์นาร์ดเป็นดาวแคระแดง และเป็นหนึ่งในเพื่อนบ้านที่ใกล้เราที่สุด อยู่ห่างออกไปราว 5.96 ปีแสง ในกลุ่มดาวคนแบกงู", "ในปี 1916 นักดาราศาสตร์เอ็ดเวิร์ด เอเมอร์สัน บาร์นาร์ด ค้นพบสถิติของมัน: เป็นดาวที่มีการเคลื่อนที่เฉพาะมากที่สุดบนท้องฟ้า มันเคลื่อนไปประมาณ 10 พิลิปดาต่อปีเมื่อเทียบกับดาวพื้นหลัง", "มันเล็กกว่า เย็นกว่า และสลัวกว่าดวงอาทิตย์มาก มีมวลราว 16% ของดวงอาทิตย์ และพื้นผิวมีอุณหภูมิราว 3,200 เคลวิน เช่นเดียวกับดาวแคระแดงอื่น ๆ มันส่องแสงส่วนใหญ่เป็นแสงสีแดงและอินฟราเรด", "ลองดูวิดีโอ: ขณะที่ดาวดวงอื่นอยู่นิ่ง มันกลับเปลี่ยนตำแหน่ง และมันไม่ได้อยู่ลำพัง ระหว่างปี 2024 ถึง 2025 มีการยืนยันดาวเคราะห์ขนาดเล็กสี่ดวงที่โคจรรอบมัน"], "d": [["5.96 ปีแสง", "ระยะทาง (1.83 pc)"], ["1916", "ค้นพบการเคลื่อนที่"], ["~3,200 K", "อุณหภูมิพื้นผิว"], ["M4 V", "ดาวแคระแดง GJ 699"], ["0.16", "มวลดวงอาทิตย์"], ["ดาวเคราะห์ 4 ดวง", "ยืนยันในปี 2024-2025"]], "p": "ภาพจาก SPHEREx ในวันที่ต่างกัน เครื่องหมายกากบาทแสดงตำแหน่งของดาว สังเกตว่ามันเคลื่อนที่อย่างไร"}, {"t": "WISE 0855 ดาวแคระน้ำตาลที่เย็นที่สุด", "g": ["มารู้จักวัตถุแปลก ๆ ชิ้นนี้กัน: WISE 0855−0714 มันไม่ใช่ทั้งดาวฤกษ์และดาวเคราะห์ แต่เป็นดาวแคระน้ำตาลชนิด Y วัตถุที่มีมวลใกล้เคียงดาวเคราะห์และล่องลอยอยู่ลำพังในอวกาศ อยู่ห่างออกไปราว 7.4 ปีแสง ในกลุ่มดาวงูไฮดรา", "มันถูกค้นพบในปี 2014 ด้วยกล้องโทรทรรศน์อินฟราเรด WISE ของ NASA มันมีมวลไม่พอที่จะหลอมไฮโดรเจนเหมือนดาวฤกษ์ จึงแทบไม่ส่องแสงในช่วงแสงที่มองเห็น มันปล่อยออกมาเพียงความร้อนที่เหลือจากตอนกำเนิดในรูปอินฟราเรด", "มันเป็นวัตถุประเภทนี้ที่เย็นที่สุดเท่าที่รู้จัก: ระหว่าง 225 ถึง 260 K หรือลบ 48 ถึงลบ 13 องศาเซลเซียส เย็นพอ ๆ กับสถานที่ที่หนาวที่สุดบนโลก ชั้นบรรยากาศมีน้ำและมีเทน เคยคิดกันว่ามันอาจมีเมฆน้ำแข็ง แต่กล้องโทรทรรศน์เจมส์ เวบบ์ยังไม่พบ", "การศึกษามันช่วยให้เราเข้าใจเส้นแบ่งระหว่างดาวเคราะห์ยักษ์กับดาวฤกษ์ที่เล็กที่สุด กล้องอินฟราเรดอย่าง SPHEREx จึงเหมาะอย่างยิ่งสำหรับการค้นหาโลกแบบนี้"], "d": [["7.4 ปีแสง", "ระยะทาง (2.28 pc)"], ["2014", "ปีที่ค้นพบ"], ["225 ถึง 260 K", "อุณหภูมิ (-48 ถึง -13 °C)"], ["ชนิด Y", "ดาวแคระน้ำตาลโดดเดี่ยว"], ["งูไฮดรา", "กลุ่มดาว"]], "p": "ภาพจาก SPHEREx ในช่วงอินฟราเรดที่ยาวที่สุด (เครื่องตรวจจับ D6) ซึ่งวัตถุเย็นนี้สว่างที่สุด"}, {"t": "เอปไซลอนอินดี B ดาวแคระน้ำตาลคู่", "g": ["ที่นี่ไม่ได้มีดาวแคระน้ำตาลดวงเดียว แต่มีสองดวงที่โคจรรอบกันและกัน: เอปไซลอนอินดี Ba และ Bb อยู่ห่างออกไปราว 11.9 ปีแสง ในกลุ่มดาวอินเดียนแดง และเป็นวัตถุประเภทนี้ที่อยู่ใกล้ดวงอาทิตย์ที่สุดกลุ่มหนึ่ง", "มันถูกค้นพบในเดือนมกราคม 2003 ตอนแรกเห็นวัตถุจาง ๆ ที่เคลื่อนที่เหมือนดาวเอปไซลอนอินดี A ทุกประการ จึงรู้ว่ามันเดินทางไปด้วยกันโดยแรงโน้มถ่วง ต่อมาพบว่าวัตถุนั้นที่จริงมีสองดวง", "ทั้งสองแตกต่างกัน: Ba มีอุณหภูมิ 1,300 ถึง 1,340 K ส่วน Bb มี 880 ถึง 940 K ในชั้นบรรยากาศมีมีเทนและไอน้ำ ซึ่งเป็นลักษณะของวัตถุที่เย็นกว่าดาวฤกษ์มาก", "มันเป็นห้องทดลองธรรมชาติสำหรับศึกษาว่าวัตถุเหล่านี้เย็นตัวและเปลี่ยนแปลงอย่างไร ณ เส้นแบ่งระหว่างดาวเคราะห์ยักษ์กับดาวฤกษ์ขนาดเล็ก"], "d": [["11.9 ปีแสง", "ระยะทาง (3.64 pc)"], ["2003", "ปีที่ค้นพบ"], ["1,300-1,340 K", "อุณหภูมิของ Ba (T1)"], ["880-940 K", "อุณหภูมิของ Bb (T6)"], ["อินเดียนแดง", "กลุ่มดาว"]], "p": "ภาพจาก SPHEREx ในวันที่ต่างกัน รอบเอปไซลอนอินดี B"}, {"t": "RW สารถี ดาวที่ชอบซ่อนตัว", "g": ["RW สารถีเป็นระบบดาวที่อายุน้อยมาก ราว 3 ล้านปี อยู่ในย่านกำเนิดดาววัว-สารถี ห่างออกไปราว 510 ปีแสง", "มันมีดาวหลักสองดวง คือ RW สารถี A และ B ทั้งคู่เป็นดาวประเภททีทอรี ยังคงเติบโตและดึงสสารจากจานแก๊สและฝุ่นรอบตัว ซึ่งเป็นสสารเดียวกับที่ใช้สร้างดาวเคราะห์ RW สารถีถูกระบุว่าเป็นดาวทีทอรีในปี 1945", "สิ่งที่น่าสนใจที่สุดคือความสว่างของมันเปลี่ยนไป มันหรี่ลงมากเมื่อเมฆฝุ่นและแก๊สเคลื่อนผ่านหน้าดาว ตั้งแต่ปี 2010 มีการสังเกตการหรี่แสงครั้งใหญ่มาก และการศึกษาเหตุการณ์เหล่านี้บอกเราว่ามีสสารอะไรอยู่รอบตัวมัน", "ในวิดีโอนี้เราไม่ได้มองหาการเคลื่อนที่ แต่มองหาการเปลี่ยนแปลงความสว่าง สังเกตว่าดาวตรงกลางดูสว่างขึ้นหรือหรี่ลงในแต่ละวันที่"], "d": [["~510 ปีแสง", "ระยะทาง (156 pc)"], ["~3 ล้านปี", "อายุ"], ["~5,000 K", "อุณหภูมิของ RW Aur A"], ["K1-K3", "ชนิดสเปกตรัมของ A"], ["สารถี", "กลุ่มดาว"]], "p": "ภาพจาก SPHEREx ที่ใช้ความสว่างอ้างอิงเดียวกันในทุกวันที่ เพื่อการเปรียบเทียบ"}, {"t": "R มังกร ดาวที่หายใจได้", "g": ["R มังกรเป็นดาวยักษ์แดงในกลุ่มดาวมังกร เป็นดาวแปรแสงชนิดมิรา คือดาวแก่ที่พองตัวและหดตัว เหมือนกำลังหายใจ", "มันอยู่ในช่วงปลายของชีวิตที่เรียกว่าแขนงดาวยักษ์เชิงเส้นกำกับ ได้ใช้เชื้อเพลิงไปมากแล้ว และมีเปลือกชั้นนอกขนาดมหึมาที่ค่อนข้างเย็น", "ทุกครั้งที่มันหายใจ ขนาด อุณหภูมิ และความสว่างจะเปลี่ยนไป จากแมกนิจูด 6.7 ไปถึง 13.2 หรี่ลงราว 400 เท่า และวนซ้ำทุก 246 วัน", "มันยังสูญเสียสสารออกสู่อวกาศ และสสารนั้นจะช่วยสร้างดาวฤกษ์และดาวเคราะห์ดวงใหม่ ด้วยภาพทุก ๆ หกเดือน SPHEREx จึงจับภาพมันได้ในจังหวะการหายใจที่ต่างกัน"], "d": [["246 วัน", "ความยาวของรอบ"], ["6.7 ถึง 13.2", "ช่วงความสว่าง (แมกนิจูด)"], ["M4.5-M6e", "ชนิดสเปกตรัม"], ["ดาวแปรแสงมิรา", "ดาวยักษ์แดงที่เต้น"], ["มังกร", "กลุ่มดาว"]], "p": "ภาพจาก SPHEREx ที่ใช้ความสว่างอ้างอิงเดียวกัน เปรียบเทียบว่ามันสว่างแค่ไหนในแต่ละวันที่"}, {"t": "ถึงตาคุณสำรวจแล้ว", "g": ["การนำชมจบลงแล้ว แต่ท้องฟ้านั้นกว้างใหญ่ และ SPHEREx ถ่ายภาพไว้ทั้งหมด", "ในท้องฟ้าจำลอง คุณสามารถมองท้องฟ้าทั้งหมดรอบตัวได้ และด้วยเครื่องมือของเรา คุณพิมพ์ชื่อหรือพิกัดใดก็ได้ เพื่อดูว่าท้องฟ้าส่วนนั้นเปลี่ยนไปอย่างไรในภาพจริงของ NASA", "บางทีคุณอาจพบสิ่งที่ยังไม่มีใครเคยเห็น วัตถุมากมายถูกค้นพบด้วยวิธีนี้ คือการเปรียบเทียบภาพจากวันที่ต่างกัน"]}], "ar": [{"t": "مرحبًا بك", "g": ["مرحبًا بك. سأكون مرشدك في هذا المتحف للسماء المتحركة.", "منذ عام 2025، تصوّر بعثة SPHEREx التابعة لناسا السماء كلها كل ستة أشهر بـ102 لونًا من الضوء تحت الأحمر القريب، وتسجّل مئات الملايين من المجرات والنجوم.", "يمكن اكتشاف المذنبات والكويكبات والنجوم والأقزام البنية بل وكواكب جديدة لأنها تغيّر موقعها أو سطوعها من صورة إلى أخرى. لكن لا يستطيع أي شخص وحده مراجعة كل هذه المعلومات. لهذا صنعنا هذا المتحف: لكي تنظر أنت أيضًا.", "انتقل إلى القاعة التالية لتتعرّف على التلسكوب."]}, {"t": "SPHEREx، مصوّر السماء", "g": ["أُطلق SPHEREx إلى الفضاء في 11 مارس 2025 على متن صاروخ فالكون 9 من ولاية كاليفورنيا.", "قوته الخارقة أنه يصوّر السماء كلها، في كل الاتجاهات، مرة كل ستة أشهر تقريبًا. ولا يراها بلون واحد، بل بـ102 لونًا من الضوء تحت الأحمر الذي لا تراه أعيننا.", "ولذلك لديه ستة كواشف، يفصل كل منها الضوء إلى 17 لونًا. ستة في سبعة عشر: 102 خريطة للسماء في كل مرة. ولأنه يصوّر السماء مرة بعد مرة، يمكننا مقارنة صور من تواريخ مختلفة واكتشاف ما تغيّر."], "d": [["11 مارس 2025", "الإطلاق"], ["102", "لونًا تحت أحمر"], ["~6 أشهر", "لتصوير السماء كلها"], ["ديسمبر 2025", "أول خريطة كاملة"]]}, {"t": "نجم برنارد", "g": ["نجم برنارد قزم أحمر، وهو من أقرب جيراننا: يبعد نحو 5.96 سنة ضوئية، في كوكبة الحوّاء.", "في عام 1916 اكتشف الفلكي إدوارد إمرسون برنارد رقمه القياسي: إنه النجم صاحب أكبر حركة ذاتية في السماء كلها، إذ يتحرك نحو 10 ثوانٍ قوسية كل عام مقارنة بنجوم الخلفية.", "إنه أصغر وأبرد وأخفت بكثير من شمسنا: كتلته نحو 16% من كتلة الشمس، وحرارة سطحه نحو 3,200 كلفن. ومثل الأقزام الحمراء الأخرى، يتوهج أساسًا بضوء مائل إلى الأحمر وبالأشعة تحت الحمراء.", "شاهد الفيديو: بينما تبقى النجوم الأخرى ساكنة، يغيّر هو مكانه. وهو ليس وحيدًا: بين عامي 2024 و2025 تأكّد وجود أربعة كواكب صغيرة تدور حوله."], "d": [["5.96 سنة ضوئية", "المسافة (1.83 فرسخ فلكي)"], ["1916", "اكتشاف حركته"], ["~3,200 K", "حرارة السطح"], ["M4 V", "قزم أحمر، GJ 699"], ["0.16", "كتلة شمسية"], ["4 كواكب", "مؤكدة في 2024-2025"]], "p": "صور SPHEREx من تواريخ مختلفة. يشير الصليب إلى موضع النجم؛ لاحظ كيف يتحرك."}, {"t": "WISE 0855، أبرد قزم بني", "g": ["تعرّف الآن على جرم غريب: WISE 0855−0714. ليس نجمًا ولا كوكبًا، بل قزم بني من النوع Y، جرم كتلته قريبة من كتلة كوكب ويسبح وحيدًا في الفضاء. يبعد نحو 7.4 سنة ضوئية، في كوكبة الشجاع.", "اكتُشف عام 2014 بتلسكوب WISE لناسا العامل بالأشعة تحت الحمراء. ليست لديه كتلة كافية ليدمج الهيدروجين كما تفعل النجوم، لذلك لا يكاد يتوهج في الضوء المرئي، ويطلق فقط بالأشعة تحت الحمراء الحرارة المتبقية منذ تكوّنه.", "إنه أبرد جرم معروف من نوعه: بين 225 و260 كلفن، أي بين 48 و13 درجة مئوية تحت الصفر، في برودة أكثر الأماكن تجمدًا على الأرض. يحتوي غلافه الجوي على الماء والميثان. كان يُعتقد أنه قد يحتوي على سحب جليدية، لكن تلسكوب جيمس ويب لم يعثر عليها.", "تساعدنا دراسته على فهم الحد الفاصل بين الكواكب العملاقة وأصغر النجوم. ولهذا تُعد التلسكوبات العاملة بالأشعة تحت الحمراء مثل SPHEREx مثالية للبحث عن عوالم كهذه."], "d": [["7.4 سنة ضوئية", "المسافة (2.28 فرسخ فلكي)"], ["2014", "سنة الاكتشاف"], ["225 إلى 260 K", "الحرارة (-48 إلى -13 °م)"], ["النوع Y", "قزم بني منفرد"], ["الشجاع", "الكوكبة"]], "p": "صور SPHEREx في أطول نطاق تحت أحمر لديه (الكاشف D6)، حيث يكون هذا الجرم البارد في أشد سطوعه."}, {"t": "إبسيلون الهندي B، زوج من الأقزام البنية", "g": ["هنا لا يوجد قزم بني واحد بل اثنان يدوران أحدهما حول الآخر: إبسيلون الهندي Ba وBb. يبعدان نحو 11.9 سنة ضوئية، في كوكبة الهندي، وهما من أقرب الأجرام من هذا النوع إلى الشمس.", "اكتُشفا في يناير 2003. في البداية شوهد جرم خافت يتحرك تمامًا مثل النجم إبسيلون الهندي A، فعُرف أنهما يسافران معًا مرتبطين بالجاذبية. ثم تبيّن لاحقًا أن ذلك الجرم كان في الحقيقة اثنين.", "الاثنان مختلفان: حرارة Ba بين 1,300 و1,340 كلفن، وحرارة Bb بين 880 و940 كلفن. وتحتوي أغلفتهما الجوية على الميثان وبخار الماء، وهي سمة أجرام أبرد بكثير من النجوم.", "إنهما مختبر طبيعي لدراسة كيف تبرد هذه الأجرام وتتغير، على الحد الفاصل بين الكواكب العملاقة والنجوم الصغيرة."], "d": [["11.9 سنة ضوئية", "المسافة (3.64 فرسخ فلكي)"], ["2003", "سنة الاكتشاف"], ["1,300-1,340 K", "حرارة Ba (T1)"], ["880-940 K", "حرارة Bb (T6)"], ["الهندي", "الكوكبة"]], "p": "صور SPHEREx من تواريخ مختلفة حول إبسيلون الهندي B."}, {"t": "RW ممسك الأعنة، النجم الذي يختبئ", "g": ["RW ممسك الأعنة نظام من نجوم فتيّة جدًا، عمرها نحو 3 ملايين سنة، في منطقة الثور-ممسك الأعنة لتكوّن النجوم. يبعد نحو 510 سنوات ضوئية.", "له نجمان رئيسيان، A وB. كلاهما من نجوم الثور T: ما زالا ينموان ويجذبان المادة من قرص الغاز والغبار المحيط بهما، وهي المادة نفسها التي تتكوّن منها الكواكب. وقد صُنّف RW ممسك الأعنة نجمًا من نوع الثور T عام 1945.", "أكثر ما يثير الاهتمام أن سطوعه يتغير: ينخفض كثيرًا عندما تمر سحب من الغبار والغاز أمام النجم. ومنذ عام 2010 رُصدت حالات خفوت كبيرة جدًا، ودراستها تخبرنا بالمواد الموجودة حوله.", "في هذا الفيديو لا نبحث عن الحركة، بل عن تغيّرات السطوع. لاحظ هل يبدو النجم في المنتصف أكثر سطوعًا أم أخفت من تاريخ لآخر."], "d": [["~510 سنوات ضوئية", "المسافة (156 فرسخ فلكي)"], ["~3 ملايين سنة", "العمر"], ["~5,000 K", "حرارة RW Aur A"], ["K1-K3", "النوع الطيفي لـ A"], ["ممسك الأعنة", "الكوكبة"]], "p": "صور SPHEREx بنفس السطوع المرجعي في كل التواريخ، للمقارنة."}, {"t": "R التنين، النجم الذي يتنفس", "g": ["R التنين عملاق أحمر في كوكبة التنين. وهو متغير من نوع ميرا: نجم عجوز ينتفخ وينكمش كأنه يتنفس.", "إنه في مرحلة متقدمة من حياته تُسمّى فرع العمالقة التقاربي: استهلك جزءًا كبيرًا من وقوده، وله غلاف خارجي هائل وبارد نسبيًا.", "في كل نفَس يتغير حجمه وحرارته وسطوعه: ينتقل من القدر 6.7 إلى 13.2، أي يصبح أخفت بنحو 400 مرة، ويكرر الدورة كل 246 يومًا.", "كما أنه يفقد مادة إلى الفضاء، وستساعد هذه المادة على تكوين نجوم وكواكب جديدة. وبصور كل ستة أشهر، يستطيع SPHEREx التقاطه في لحظات مختلفة من تنفسه."], "d": [["246 يومًا", "طول دورته"], ["6.7 إلى 13.2", "مدى السطوع (القدر)"], ["M4.5-M6e", "النوع الطيفي"], ["متغير ميرا", "عملاق أحمر نابض"], ["التنين", "الكوكبة"]], "p": "صور SPHEREx بنفس السطوع المرجعي: قارن مدى سطوعه في كل تاريخ."}, {"t": "الآن استكشف بنفسك", "g": ["انتهت هذه الجولة، لكن السماء هائلة وSPHEREx يصوّرها كلها.", "في القبة السماوية يمكنك أن ترى السماء كلها من حولك. ومع أداتنا يمكنك كتابة أي اسم أو إحداثيات لترى كيف تغيّرت تلك البقعة من السماء في صور ناسا الحقيقية.", "ربما تجد شيئًا لم يره أحد بعد. هكذا اكتُشفت أجرام كثيرة: بمقارنة صور من تواريخ مختلفة."]}], "ja": [{"t": "ようこそ", "g": ["こんにちは、ようこそ。わたしがこの「動く空の博物館」のガイドです。", "2025年から、NASAのSPHEREx（スフィアエックス）ミッションは、近赤外線の102色で半年ごとに全天を撮影し、何億もの銀河や星を記録しています。", "彗星、小惑星、恒星、褐色矮星、さらには新しい惑星も、写真ごとに位置や明るさが変わることで見つけられます。でも、これほど大量の情報をひとりで調べることはできません。だから、あなたにも一緒に見てもらえるよう、この博物館をつくりました。", "次の展示室で望遠鏡に会いに行きましょう。"]}, {"t": "SPHEREx、空の写真家", "g": ["SPHERExは2025年3月11日、ファルコン9ロケットでカリフォルニアから宇宙へ打ち上げられました。", "そのすごいところは、およそ半年ごとに、あらゆる方向の空をまるごと撮影することです。しかも1色ではなく、わたしたちの目には見えない赤外線の102色で空を見ています。", "そのために6つの検出器があり、それぞれが光を17色に分けます。6かける17で、毎回102枚の空の地図ができます。何度もくり返し撮影するので、ちがう日付の写真をくらべて、何が変わったのかを見つけられます。"], "d": [["2025年3月11日", "打ち上げ"], ["102", "赤外線の色"], ["約6か月", "全天を撮影する周期"], ["2025年12月", "最初の全天地図"]]}, {"t": "バーナード星", "g": ["バーナード星は赤色矮星で、わたしたちのいちばん近いご近所さんのひとつです。へびつかい座にあり、距離は約5.96光年です。", "1916年、天文学者エドワード・エマーソン・バーナードがその記録を発見しました。全天でいちばん大きな固有運動をもつ星で、背景の星に対して1年に約10秒角も動きます。", "太陽よりずっと小さく、冷たく、暗い星です。質量は太陽の約16%、表面温度は約3,200ケルビン。ほかの赤色矮星と同じように、おもに赤っぽい光と赤外線で輝いています。", "動画を見てください。ほかの星はじっとしているのに、この星だけ場所が変わります。しかもひとりではありません。2024年から2025年にかけて、まわりを回る小さな惑星が4つ確認されました。"], "d": [["5.96光年", "距離（1.83 pc）"], ["1916", "動きの発見"], ["約3,200 K", "表面温度"], ["M4 V", "赤色矮星、GJ 699"], ["0.16", "太陽質量"], ["惑星4つ", "2024〜2025年に確認"]], "p": "ちがう日付のSPHEREx画像です。十字が星の位置です。どう動くか見てみましょう。"}, {"t": "WISE 0855、もっとも冷たい褐色矮星", "g": ["次はふしぎな天体、WISE 0855−0714です。恒星でも惑星でもなく、Y型の褐色矮星。惑星に近い質量をもち、宇宙をひとりでただよう天体です。うみへび座にあり、距離は約7.4光年です。", "2014年、NASAの赤外線望遠鏡WISEで発見されました。恒星のように水素の核融合をするだけの質量がないので、目に見える光ではほとんど光りません。生まれたときに残った熱を、赤外線で出しているだけです。", "この種類で知られているもっとも冷たい天体で、225〜260K、つまりマイナス48度からマイナス13度。地球でいちばん寒い場所くらいの冷たさです。大気には水とメタンがあります。氷の雲があるかもしれないと考えられていましたが、ジェイムズ・ウェッブ望遠鏡は見つけていません。", "この天体を調べると、巨大惑星といちばん小さな恒星の境目がわかってきます。だからSPHERExのような赤外線望遠鏡は、こうした世界をさがすのにぴったりなのです。"], "d": [["7.4光年", "距離（2.28 pc）"], ["2014", "発見年"], ["225〜260 K", "温度（-48〜-13 °C）"], ["Y型", "単独の褐色矮星"], ["うみへび座", "星座"]], "p": "SPHERExのいちばん長い赤外線（検出器D6）での画像です。この冷たい天体がいちばん明るく見えます。"}, {"t": "インディアン座イプシロンB、褐色矮星のペア", "g": ["ここには褐色矮星がひとつではなく、ふたつあり、たがいのまわりを回っています。インディアン座イプシロンBaとBbです。インディアン座にあり、距離は約11.9光年。太陽にいちばん近いこの種類の天体のひとつです。", "2003年1月に発見されました。最初に、インディアン座イプシロンAという星とまったく同じように動く暗い天体が見つかり、重力で結ばれていっしょに動いているとわかりました。そのあと、その天体が実はふたつだったことがわかりました。", "ふたつはちがいます。Baは1,300〜1,340K、Bbは880〜940Kです。大気にはメタンと水蒸気があり、恒星よりずっと冷たい天体の特徴です。", "巨大惑星と小さな恒星の境目にある天体が、どのように冷えて変わっていくのかを調べられる、自然の実験室です。"], "d": [["11.9光年", "距離（3.64 pc）"], ["2003", "発見年"], ["1,300-1,340 K", "Baの温度（T1）"], ["880-940 K", "Bbの温度（T6）"], ["インディアン座", "星座"]], "p": "インディアン座イプシロンBのまわりを、ちがう日付に撮ったSPHEREx画像です。"}, {"t": "ぎょしゃ座RW、かくれんぼする星", "g": ["ぎょしゃ座RWは、生まれて約300万年のとても若い星たちの系で、おうし座・ぎょしゃ座の星形成領域にあります。距離は約510光年です。", "おもな星はAとBのふたつ。どちらもおうし座T型星で、まだ成長中です。まわりのガスとちりの円盤から物質を取りこんでいます。惑星のもとになるのと同じ物質です。ぎょしゃ座RWは1945年におうし座T型星と確認されました。", "いちばんおもしろいのは、明るさが変わることです。ちりやガスの雲が星の前を通ると、大きく暗くなります。2010年からとても大きな減光が観測されていて、それを調べるとまわりにどんな物質があるかがわかります。", "この動画では動きではなく、明るさの変化をさがします。まん中の星が日付によって明るく見えるか、暗く見えるか見てみましょう。"], "d": [["約510光年", "距離（156 pc）"], ["約300万年", "年齢"], ["約5,000 K", "RW Aur Aの温度"], ["K1-K3", "Aのスペクトル型"], ["ぎょしゃ座", "星座"]], "p": "どの日付も同じ基準の明るさにしたSPHEREx画像です。くらべてみましょう。"}, {"t": "りゅう座R、呼吸する星", "g": ["りゅう座Rは、りゅう座にある赤色巨星です。ミラ型変光星といって、まるで呼吸するようにふくらんだり縮んだりする年老いた星です。", "漸近巨星分枝とよばれる、一生の終わりに近い段階にいます。燃料の多くをすでに使いきり、巨大で比較的冷たい外層をもっています。", "呼吸するたびに、大きさ、温度、明るさが変わります。6.7等から13.2等まで、約400分の1の暗さになり、246日ごとにくり返します。", "さらに宇宙へ物質を失っていて、その物質は新しい星や惑星をつくる材料になります。半年ごとの撮影で、SPHERExはこの星の呼吸のいろいろな瞬間をとらえられます。"], "d": [["246日", "周期の長さ"], ["6.7〜13.2", "明るさの範囲（等級）"], ["M4.5-M6e", "スペクトル型"], ["ミラ型変光星", "脈動する赤色巨星"], ["りゅう座", "星座"]], "p": "同じ基準の明るさにしたSPHEREx画像です。日付ごとにどれくらい明るいかくらべてみましょう。"}, {"t": "さあ、あなたが探検する番", "g": ["見学はこれでおしまい。でも空はとても広く、SPHERExはそのすべてを撮影しています。", "プラネタリウムでは、まわりの空全体を見わたせます。そしてわたしたちのツールに好きな名前や座標を入力すれば、その空がNASAの本物の画像でどう変わったかを見られます。", "まだだれも見たことのないものが見つかるかもしれません。多くの天体がそうやって発見されてきました。ちがう日付の写真をくらべることで。"]}]};
+(function () {
+  SALAS.forEach((s, i) => {
+    const titulo = { es: s.titulo }, guia = { es: s.guia }, pie = s.pie ? { es: s.pie } : null;
+    const datos = s.datos.map(d => [{ es: d[0] }, { es: d[1] }]);
+    for (const l in TRAD_SALAS) {
+      const x = TRAD_SALAS[l][i]; if (!x) continue;
+      titulo[l] = x.t; guia[l] = x.g; if (pie && x.p) pie[l] = x.p;
+      (x.d || []).forEach((d, k) => { if (datos[k]) { datos[k][0][l] = d[0]; datos[k][1][l] = d[1]; } });
+    }
+    s.titulo = titulo; s.guia = guia; if (pie) s.pie = pie; s.datos = datos;
+  });
+})();
+
+// ---------------------------------------------------------------------------
+// Navegacion entre vistas
+// ---------------------------------------------------------------------------
+let salaActual = 0;
+
+// Sonido ambiente opcional: pon un archivo en sitio/audio/ambiente.mp3
+// (por ejemplo, un audio de la biblioteca Artemis de NASA). Si no existe, el boton no aparece.
+const ambiente = new Audio('audio/ambiente.mp3');
+ambiente.loop = true; ambiente.volume = 0.35;
+ambiente.addEventListener('canplaythrough', () => { document.getElementById('btn-sonido').style.display = 'inline-block'; }, { once: true });
+ambiente.load();
+function sonido() {
+  const b = document.getElementById('btn-sonido');
+  if (ambiente.paused) { ambiente.play(); b.textContent = t('sonido_on'); }
+  else { ambiente.pause(); b.textContent = t('sonido_off'); }
+}
+function irA(vista, sala) {
+  const actual = document.querySelector('.vista.activa');
+  if (actual && actual.id !== vista && !irA.enCurso) {   // fundido suave: se oscurece, cambia y aparece
+    irA.enCurso = true; document.body.classList.add('cambiando');
+    setTimeout(() => { irA.enCurso = false; mostrarVista(vista, sala); document.body.classList.remove('cambiando'); }, 260);
+    return;
+  }
+  mostrarVista(vista, sala);
+}
+function mostrarVista(vista, sala) {
+  document.querySelectorAll('.vista').forEach(v => v.classList.toggle('activa', v.id === vista));
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('activo', b.dataset.vista === vista));
+  if (vista === 'planetario') iniciarPlanetario();
+  if (vista === 'museo') mostrarSala(sala === undefined ? salaActual : sala);
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => irA(b.dataset.vista));
+
+// ---------------------------------------------------------------------------
+// Museo
+// ---------------------------------------------------------------------------
+function ligaHerramienta(s) {
+  return HERRAMIENTA + "/?coord=" + encodeURIComponent(s.clave) + "&fov=3";
+}
+// Sala del museo dibujada como una galeria: pared con cuadro iluminado, cedulas con los datos,
+// puertas a las salas vecinas, piso con cordon y banca, y el texto del guia en un cuadro de dialogo.
+const PAREDES = ['#6b5a7a', '#3f5f7f', '#7a4a44', '#4a5a6e', '#55684a', '#7a683e', '#6e4250', '#3e5a5a'];
+let parrafo = 0;
+function obraEspecial(i) {
+  const cielo = '<rect width="400" height="300" fill="#0d1428"/>' +
+    Array.from({ length: 70 }, (_, k) => `<circle cx="${(k * 97) % 400}" cy="${(k * 53) % 300}" r="${k % 9 ? 1.2 : 2.2}" fill="#f3ecd2" opacity="${k % 3 ? .6 : 1}"/>`).join('');
+  if (i === 0) return `<svg viewBox="0 0 400 300">${cielo}
+    <g fill="#e3b04b"><circle cx="90" cy="210" r="5" opacity=".25"/><circle cx="150" cy="180" r="5" opacity=".45"/><circle cx="210" cy="150" r="5" opacity=".65"/><circle cx="270" cy="120" r="5" opacity=".85"/><circle cx="330" cy="90" r="8"/></g>
+    <path d="M90 210 L330 90" stroke="#e3b04b" stroke-width="1.5" stroke-dasharray="4 6" opacity=".6"/></svg>`;
+  if (i === 1) return `<svg viewBox="0 0 400 300">${cielo}
+    <g stroke="#141414" stroke-width="3" stroke-linejoin="round">
+      <rect x="168" y="200" width="64" height="44" rx="4" fill="#9aa3b5"/>
+      <rect x="150" y="244" width="100" height="12" rx="3" fill="#6f7891"/>
+      <path d="M176 200 L132 70 L268 70 L224 200 Z" fill="#d9dde6"/>
+      <path d="M182 200 L148 92 L252 92 L218 200 Z" fill="#bfc5d2"/>
+      <path d="M188 200 L164 114 L236 114 L212 200 Z" fill="#a7aec0"/>
+      <rect x="236" y="214" width="70" height="22" fill="#3f5f9a"/>
+    </g></svg>`;
+  return `<svg viewBox="0 0 400 300">${cielo}
+    <path d="M60 250 A140 140 0 0 1 340 250 Z" fill="#26385a" stroke="#141414" stroke-width="3"/>
+    <path d="M100 250 A100 100 0 0 1 300 250" fill="none" stroke="#e3b04b" stroke-width="2" stroke-dasharray="3 7"/>
+    <rect x="170" y="180" width="60" height="70" rx="30" fill="#e3b04b" stroke="#141414" stroke-width="3"/>
+    <rect x="40" y="250" width="320" height="10" fill="#aaa59d" stroke="#141414" stroke-width="3"/></svg>`;
+}
+function cieloVacio() { // si el video no existe todavia: cielo con estrellas y aviso discreto
+  return `<div class="vacio">${obraEspecial(-1).replace(/<path[\s\S]*<\/svg>/, '</svg>')}<span>${t('video_no')}</span></div>`;
+}
+function mostrarSala(i) {
+  salaActual = Math.max(0, Math.min(SALAS.length - 1, i));
+  parrafo = 0;
+  const s = SALAS[salaActual], n = SALAS.length;
+  const titulo = tr(s.titulo), corto = titulo.split(/[,،，、]/)[0], pie = tr(s.pie || '');
+  const obra = s.video ? `<img src="${s.video}" alt="SPHEREx: ${corto}"
+      onerror="this.outerHTML=cieloVacio()">` : obraEspecial(salaActual);
+  const datos = s.datos.map(d => `<div class="cedula"><b>${tr(d[0])}</b><span>${tr(d[1])}</span></div>`);
+  const mitad = Math.ceil(datos.length / 2);
+  const vecina = (k, lado) => (k < 0 || k >= n) ? '' :
+    `<button class="puerta ${lado}" onclick="mover(${lado === 'izq' ? -1 : 1})" title="${tr(SALAS[k].titulo)}">
+      <span class="marco-puerta"><span class="flecha">${lado === 'izq' ? '‹' : '›'}</span></span>
+      <small>${t('sala', { n: k + 1, t: n })}</small></button>`;
+  const acciones = `${s.clave ? `<button class="btn" onclick="verEnPlanetario(${salaActual})">${t('ver_en_plan')}</button>
+      <a class="btn" href="${ligaHerramienta(s)}" target="_blank">${t('explorar')}</a>` : ''}
+      ${s.final ? `<button class="btn principal" onclick="irA('planetario')">${t('ir_plan')}</button>
+      <a class="btn principal" href="${HERRAMIENTA}" target="_blank">${t('abrir_herr')}</a>` : ''}`;
+  let h = `<div class="salon" style="--pared:${PAREDES[salaActual % PAREDES.length]}">
+    <div class="pared">
+      <div class="lampara l1"></div><div class="lampara l2"></div><div class="luz"></div>
+      <div class="letrero"><small>${t('sala', { n: salaActual + 1, t: n })}</small><span>${titulo}</span></div>
+      ${vecina(salaActual - 1, 'izq')}${vecina(salaActual + 1, 'der')}
+      <div class="muro">
+        <div class="cedulas">${datos.slice(0, mitad).join('')}</div>
+        <div class="expo"><div class="cuadro"><div class="lienzo">${obra}</div></div>
+          ${pie ? `<div class="placa">${pie}</div>` : ''}</div>
+        <div class="cedulas">${datos.slice(mitad).join('')}</div>
+      </div>
+    </div>
+    <div class="zoclo"></div>
+    <div class="piso"><div class="poste p1"></div><div class="poste p2"></div><div class="cordon"></div><div class="banca"></div></div>
+    <div class="dialogo">
+      <svg class="astro-guia" viewBox="0 0 160 175" aria-hidden="true">
+        <g stroke="#141414" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+          <rect x="20" y="98" width="120" height="70" rx="12" fill="#cfcbc2"/>
+          <path d="M36 118 Q24 140 26 178" fill="none" stroke-width="17"/><path d="M36 118 Q24 140 26 178" fill="none" stroke="#f2f0ea" stroke-width="12"/>
+          <rect x="34" y="102" width="92" height="84" rx="24" fill="#f2f0ea"/>
+          <rect x="65" y="126" width="30" height="20" rx="4" fill="#cfcbc2" stroke-width="2.5"/>
+          <ellipse cx="80" cy="104" rx="31" ry="8" fill="#cfcbc2"/>
+          <g class="brazo">
+            <path d="M124 120 Q150 112 148 80" fill="none" stroke-width="17"/><path d="M124 120 Q150 112 148 80" fill="none" stroke="#f2f0ea" stroke-width="12"/>
+            <circle cx="148" cy="74" r="9" fill="#8d8a95"/>
+          </g>
+          <circle cx="80" cy="60" r="44" fill="#f2f0ea"/>
+          <ellipse cx="80" cy="62" rx="32" ry="26" fill="#3a4a6a" stroke-width="2.5"/>
+        </g>
+        <circle cx="73" cy="136" r="3.2" fill="#c95a4a"/><circle cx="87" cy="136" r="3.2" fill="#5a86c9"/>
+        <ellipse cx="66" cy="52" rx="5" ry="9" fill="#fff" opacity=".45" transform="rotate(35 66 52)"/>
+        <circle cx="79" cy="45" r="3" fill="#fff" opacity=".45"/>
+      </svg>
+      <div class="quien">${t('tu_guia')}</div>
+      <p id="dlg-txt"></p>
+      <div class="dlg-pie"><div class="acciones">${acciones}</div>
+        <div class="dlg-nav"><button class="btn" id="dlg-ant" onclick="pasar(-1)" aria-label="${t('anterior')}">‹</button>
+        <span id="dlg-n"></span><button class="btn principal" id="dlg-sig" onclick="pasar(1)" aria-label="${t('siguiente')}">›</button></div></div>
+    </div>
+  </div>`;
+  if (s.fuentes.length || s.final) h += `<div class="ficha-tecnica">${s.fuentes.length ? `<b>${t('fuentes')}</b><br>${s.fuentes.map(f => `<a href="${f[1]}" target="_blank">${tr(f[0])}</a>`).join('<br>')}` : ''}
+    ${s.final ? `<div class="equipo">${t('proyecto')}</div>` : ''}</div>`;
+  const salaEl = document.getElementById('sala');
+  salaEl.innerHTML = h;
+  salaEl.classList.remove('aparecer'); void salaEl.offsetWidth; salaEl.classList.add('aparecer');
+  pasar(0);
+  document.getElementById('puntos').innerHTML = SALAS.map((_, k) => `<i class="${k === salaActual ? 'on' : ''}" onclick="mostrarSala(${k})" title="${tr(SALAS[k].titulo)}"></i>`).join('');
+  document.getElementById('ant').style.visibility = salaActual === 0 ? 'hidden' : 'visible';
+  document.getElementById('sig').style.visibility = salaActual === SALAS.length - 1 ? 'hidden' : 'visible';
+}
+// Avanza o regresa el texto del guia, un parrafo a la vez; al final pasa a la siguiente sala
+function pasar(d) {
+  const g = tr(SALAS[salaActual].guia);
+  if (d > 0 && parrafo === g.length - 1) { if (salaActual < SALAS.length - 1) mover(1); return; }
+  parrafo = Math.max(0, Math.min(g.length - 1, parrafo + d));
+  const p = document.getElementById('dlg-txt'); if (!p) return;
+  p.textContent = g[parrafo]; p.classList.remove('aparecer'); void p.offsetWidth; p.classList.add('aparecer');
+  const a = document.querySelector('.astro-guia'); if (a) { a.classList.remove('habla'); void a.getBoundingClientRect(); a.classList.add('habla'); }
+  document.getElementById('dlg-n').textContent = (parrafo + 1) + ' / ' + g.length;
+  document.getElementById('dlg-ant').style.visibility = parrafo === 0 ? 'hidden' : 'visible';
+  document.getElementById('dlg-sig').style.visibility = (parrafo === g.length - 1 && salaActual === SALAS.length - 1) ? 'hidden' : 'visible';
+}
+addEventListener('keydown', e => {
+  if (!document.getElementById('museo').classList.contains('activa')) return;
+  if (e.key === 'ArrowRight') pasar(document.documentElement.dir === 'rtl' ? -1 : 1);
+  if (e.key === 'ArrowLeft') pasar(document.documentElement.dir === 'rtl' ? 1 : -1);
+});
+function mover(d) {
+  const destino = salaActual + d, el = document.getElementById('sala');
+  if (destino < 0 || destino >= SALAS.length || mover.enCurso) return;
+  const rtl = document.documentElement.dir === 'rtl', haciaDer = (d > 0) !== rtl;
+  mover.enCurso = true;
+  el.classList.remove('entra-der', 'entra-izq', 'aparecer');
+  el.classList.add(haciaDer ? 'sale-izq' : 'sale-der');
+  setTimeout(() => {
+    mostrarSala(destino); window.scrollTo(0, 0);
+    el.classList.remove('sale-izq', 'sale-der', 'aparecer'); void el.offsetWidth;
+    el.classList.add(haciaDer ? 'entra-der' : 'entra-izq');
+    mover.enCurso = false;
+  }, 280);
+}
+
+// ---------------------------------------------------------------------------
+// Planetario (Aladin Lite, CDS): cielo completo alrededor del usuario
+// ---------------------------------------------------------------------------
+let aladin = null, listo = false;
+// Fotos del cielo completo (HiPS). Se usa la primera que responda:
+// CDS (Francia), ESA (ESASky) o NASA/IPAC (IRSA).
+const CIELOS = [
+  'https://alasky.cds.unistra.fr/MellingerRGB',
+  'https://cdn.skies.esac.esa.int/DSSColor',
+  'https://irsa.ipac.caltech.edu/data/hips/CDS/DSS2/color',
+  'https://alaskybis.cds.unistra.fr/MellingerRGB',
+  'https://cdn.skies.esac.esa.int/2MASSColor',
+  'https://irsa.ipac.caltech.edu/data/hips/CDS/2MASS/Color'
+];
+async function elegirCielo() {
+  for (const url of CIELOS) {
+    try {
+      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 8000);
+      const r = await fetch(url + '/properties', { signal: ctl.signal });
+      clearTimeout(t);
+      if (r.ok) return url;
+    } catch (e) { /* probar el siguiente */ }
+  }
+  return null;
+}
+const CENTRO_GALAXIA = [266.405, -28.936];
+function revelarCielo() { document.getElementById('planetario').classList.add('cielo-listo'); }
+function iniciarPlanetario(cb) {
+  if (listo) { revelarCielo(); if (cb) cb(); return; }
+  let cielo = null;
+  cargarAladin().then(() => A.init).then(() => elegirCielo()).then((url) => {
+    cielo = url;
+    if (!cielo) { mostrarError(t('sin_cielo')); revelarCielo(); return; }
+    try {
+    aladin = A.aladin('#aladin', {
+      survey: cielo, projection: 'SIN', fov: 140,
+      target: CENTRO_GALAXIA[0] + ' ' + CENTRO_GALAXIA[1], cooFrame: 'ICRS',
+      showReticle: false, showLayersControl: true, showGotoControl: false,
+      showFullscreenControl: false, showFrame: false, showCooGridControl: true, showZoomControl: true
+    });
+    const cat = A.catalog({ name: 'Objetos del museo', color: '#8fb8ff', sourceSize: 18, shape: 'circle',
+      displayLabel: true, labelColumn: 'nombre', labelColor: '#ffffff', labelFont: '15px sans-serif' });
+    aladin.addCatalog(cat);
+    cat.addSources(SALAS.map((s, i) => s.clave ? A.source(s.ra, s.dec, { nombre: tr(s.titulo).split(',')[0], sala: i }) : null).filter(Boolean));
+    aladin.on('objectClicked', (obj) => {
+      if (obj && obj.data && obj.data.sala !== undefined) mostrarFicha(obj.data.sala);
+    });
+    listo = true;
+    setTimeout(revelarCielo, 1400);   // dar tiempo a que carguen las primeras imagenes
+    if (cb) cb();
+    } catch (err) { mostrarError(err.message || err); }
+  }).catch(err => mostrarError('Aladin no inicio: ' + (err.message || err)));
+}
+function volarA(ra, dec, fov) {
+  if (typeof aladin.animateToRaDec === 'function') aladin.animateToRaDec(ra, dec, 2.5);
+  else aladin.gotoRaDec(ra, dec);
+  setTimeout(() => {
+    if (typeof aladin.zoomToFoV === 'function') aladin.zoomToFoV(fov, 2);
+    else aladin.setFoV(fov);
+  }, 2600);
+}
+function mostrarFicha(i) {
+  const s = SALAS[i], f = document.getElementById('ficha');
+  f.innerHTML = `<b>${tr(s.titulo)}</b><p style="font-size:14px;line-height:1.5">${tr(s.guia)[0]}</p>
+    <div class="acciones"><button class="btn principal" onclick="irA('museo', ${i})">${t('ir_sala')}</button>
+    <button class="btn" onclick="document.getElementById('ficha').style.display='none'">${t('cerrar')}</button></div>`;
+  f.style.display = 'block';
+}
+function verEnPlanetario(i) {
+  irA('planetario');
+  iniciarPlanetario(() => { volarA(SALAS[i].ra, SALAS[i].dec, 2); mostrarFicha(i); });
+}
+function vistaCompleta() {
+  document.getElementById('ficha').style.display = 'none';
+  volarA(CENTRO_GALAXIA[0], CENTRO_GALAXIA[1], 140);
+}
+let paso = 0;
+function recorridoPlanetario() {
+  const objetos = SALAS.map((s, i) => i).filter(i => SALAS[i].clave);
+  const i = objetos[paso % objetos.length]; paso++;
+  volarA(SALAS[i].ra, SALAS[i].dec, 3);
+  setTimeout(() => mostrarFicha(i), 2600);
+}
+
+// Fondo de estrellas estilo caricatura: puntitos de colores suaves y algunas estrellas
+// de cuatro puntas que brillan despacio. El degradado morado lo pone el fondo de la pagina.
+(function () {
+  const cv = document.getElementById('estrellas'), cx = cv.getContext('2d');
+  const quieto = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const COLORES = ['#f3ecd2', '#f3ecd2', '#e6e0cc', '#f3ecd2'];
+  let puntos = [], w, h, dpr;
+  function generar() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = cv.width = Math.round(innerWidth * dpr); h = cv.height = Math.round(innerHeight * dpr);
+    cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
+    puntos = [];
+    const n = Math.round(innerWidth * innerHeight / 2600);
+    for (let k = 0; k < n; k++) {
+      const b = Math.random();
+      puntos.push({ x: Math.random() * w, y: Math.random() * h, b, chispa: b > 0.95, c: COLORES[k % 4], f: Math.random() * 6.28 });
+    }
+  }
+  function chispa(x, y, r) { // crucecita delgada
+    cx.fillRect(x - r, y - 0.5 * dpr, 2 * r, dpr); cx.fillRect(x - 0.5 * dpr, y - r, dpr, 2 * r);
+  }
+  let ultimo = 0;
+  function dibujar(t) {
+    if (!document.getElementById('planetario').classList.contains('activa') && t - ultimo > 50) {
+      ultimo = t; cx.clearRect(0, 0, w, h);
+      for (const e of puntos) {
+        const a = quieto ? 1 : 0.6 + 0.4 * Math.sin(e.f + t / 700);
+        cx.fillStyle = e.c; cx.globalAlpha = (0.4 + e.b * 0.6) * (e.chispa ? a : 1);
+        if (e.chispa) chispa(e.x, e.y, 5 * dpr);
+        else { cx.beginPath(); cx.arc(e.x, e.y, (0.7 + e.b * 1.4) * dpr, 0, 6.2832); cx.fill(); }
+      }
+      cx.globalAlpha = 1;
+    }
+    requestAnimationFrame(dibujar);
+  }
+  let espera; addEventListener('resize', () => { clearTimeout(espera); espera = setTimeout(generar, 200); });
+  generar(); requestAnimationFrame(dibujar);
+})();
+
+// ---------------------------------------------------------------------------
+// Escena de inicio estilo caricatura de colores apagados (dibujo original): el fondo va
+// pintado en colores planos sin contorno y con un poco de textura; solo el personaje lleva
+// linea negra delgada. Brazos y piernas delgados.
+// ---------------------------------------------------------------------------
+(function () {
+  const cv = document.getElementById('pixel'); if (!cv) return;
+  cv.style.imageRendering = 'auto';
+  const cx = cv.getContext('2d');
+  const quieto = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const LINEA = '#141414';
+  let W, H, u, suelo, estrellas = [], continentes = [], nubes = [], ultimo = 0;
+  const fondo = document.createElement('canvas'), piso = document.createElement('canvas');
+
+  function textura(f, x0, y0, w, h, n) { // grano de pintura muy suave
+    for (let k = 0; k < n; k++) {
+      f.fillStyle = Math.random() < 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+      f.fillRect(x0 + Math.random() * w, y0 + Math.random() * h, 2 * u, 2 * u);
+    }
+  }
+  function preparar() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = cv.width = Math.round(innerWidth * dpr); H = cv.height = Math.round(innerHeight * dpr);
+    u = H / 360; suelo = H * 0.68;
+    fondo.width = W; fondo.height = H; const f = fondo.getContext('2d');
+    // cielo en franjas planas (sin degradado suave), azul apagado
+    const franjas = ['#16213a', '#192540', '#1c2946', '#1f2e4c', '#223252', '#253759', '#293c60', '#2d4267'];
+    franjas.forEach((c, k) => { f.fillStyle = c; f.fillRect(0, suelo * k / franjas.length, W, suelo / franjas.length + 1); });
+    textura(f, 0, 0, W, suelo, W * suelo / (90 * u * u));
+    estrellas = [];
+    for (let k = 0; k < W * suelo / (700 * u * u); k++) {
+      const x = Math.random() * W, y = Math.random() * suelo * 0.97, b = Math.random();
+      if (b > 0.94) { estrellas.push({ x, y, b, f: Math.random() * 6.28 }); continue; }
+      f.fillStyle = b > 0.6 ? '#f3ecd2' : 'rgba(243,236,210,0.6)';
+      f.beginPath(); f.arc(x, y, (0.6 + b * 1.1) * u, 0, 6.2832); f.fill();
+    }
+    // lomas del fondo y suelo: colores planos, sin contorno (capa aparte, transparente arriba)
+    piso.width = W; piso.height = H; const fc = piso.getContext('2d');
+    const pts = [];
+    for (let x = -80 * u; x <= W + 80 * u; x += 70 * u) {
+      const lejos = Math.min(1, Math.abs(x / W - 0.5) * 2.4);
+      pts.push([x, suelo - (3 + lejos * 20 + Math.sin(x / (53 * u)) * 7 * lejos) * u]);
+    }
+    fc.beginPath(); fc.moveTo(-20, H + 20); fc.lineTo(pts[0][0], pts[0][1]);
+    for (let k = 1; k < pts.length - 1; k++) fc.quadraticCurveTo(pts[k][0], pts[k][1], (pts[k][0] + pts[k + 1][0]) / 2, (pts[k][1] + pts[k + 1][1]) / 2);
+    fc.lineTo(W + 20, pts[pts.length - 1][1]); fc.lineTo(W + 20, H + 20); fc.closePath();
+    fc.fillStyle = '#7d7a86'; fc.fill();
+    fc.beginPath(); fc.moveTo(-20, H + 20); fc.lineTo(-20, suelo + 8 * u);
+    fc.bezierCurveTo(W * 0.3, suelo - 6 * u, W * 0.7, suelo + 14 * u, W + 20, suelo + 2 * u);
+    fc.lineTo(W + 20, H + 20); fc.closePath(); fc.fillStyle = '#aaa59d'; fc.fill();
+    // sombra plana del lado derecho del suelo (el Sol esta a la izquierda)
+    fc.save(); fc.clip(); fc.fillStyle = 'rgba(40,40,70,0.12)';
+    fc.beginPath(); fc.moveTo(W * 0.62, H); fc.quadraticCurveTo(W * 0.8, suelo, W + 20, suelo); fc.lineTo(W + 20, H); fc.fill();
+    textura(fc, 0, suelo - 30 * u, W, H - suelo + 30 * u, W * (H - suelo) / (50 * u * u));
+    for (let k = 0; k < Math.round(W / (50 * u)); k++) {
+      const fy = Math.random(), y = suelo + 16 * u + fy * (H - suelo - 10 * u), r = (7 + Math.random() * 22) * u * (0.45 + fy * 0.9), ry = r * 0.36;
+      const x = Math.random() * W;
+      fc.fillStyle = '#c4bfb6'; fc.beginPath(); fc.ellipse(x, y + ry * 0.25, r * 1.06, ry * 1.1, 0, 0, 6.2832); fc.fill();   // borde claro
+      fc.fillStyle = '#8f8a82'; fc.beginPath(); fc.ellipse(x, y, r, ry, 0, 0, 6.2832); fc.fill();
+      fc.fillStyle = '#9e998f'; fc.beginPath(); fc.ellipse(x + r * 0.2, y + ry * 0.3, r * 0.8, ry * 0.6, 0, 0, 6.2832); fc.fill();
+    }
+    fc.restore();
+    continentes = []; nubes = [];
+    const grupo = (lista, lon0, lat0, cuantos, tam, disp) => {
+      for (let k = 0; k < cuantos; k++) lista.push({ lon: lon0 + (Math.random() - 0.5) * disp, lat: lat0 + (Math.random() - 0.5) * disp * 0.7, r: tam * (0.6 + Math.random() * 0.6) });
+    };
+    grupo(continentes, 0.2, 0.45, 9, 0.2, 0.9); grupo(continentes, 0.5, -0.35, 7, 0.18, 0.7);
+    grupo(continentes, 2.3, 0.4, 11, 0.22, 1.2); grupo(continentes, 2.8, -0.2, 6, 0.16, 0.6);
+    grupo(continentes, 4.4, -0.45, 6, 0.17, 0.6); grupo(continentes, 3.9, 0.6, 5, 0.14, 0.5);
+    for (let k = 0; k < 7; k++) grupo(nubes, Math.random() * 6.28, (Math.random() - 0.5) * 1.6, 3, 0.09, 0.35);
+  }
+
+  function circulo(x, y, r) { cx.beginPath(); cx.arc(x, y, r, 0, 6.2832); }
+  function elipse(x, y, rx, ry) { cx.beginPath(); cx.ellipse(x, y, rx, ry, 0, 0, 6.2832); }
+  function linea(w) { cx.lineWidth = (w || 1.6) * u; cx.strokeStyle = LINEA; cx.lineJoin = 'round'; cx.lineCap = 'round'; cx.stroke(); }
+  function rellena(c, w) { cx.fillStyle = c; cx.fill(); linea(w); }
+  function extremidad(p, ancho, color) { // brazo o pierna delgada con linea negra
+    cx.beginPath(); cx.moveTo(p[0], p[1]); cx.quadraticCurveTo(p[2], p[3], p[4], p[5]);
+    cx.lineCap = 'round'; cx.strokeStyle = LINEA; cx.lineWidth = (ancho + 3.2) * u; cx.stroke();
+    cx.strokeStyle = color; cx.lineWidth = ancho * u; cx.stroke();
+  }
+
+  function tierra(rot, ex, ey, R) { // fondo: sin contorno, colores planos apagados
+    cx.save(); circulo(ex, ey, R); cx.clip();
+    cx.fillStyle = '#4f7fae'; cx.fillRect(ex - R, ey - R, 2 * R, 2 * R);
+    const pintar = (lista, color, giro) => {
+      cx.fillStyle = color;
+      for (const c of lista) {
+        const lon = c.lon + giro, cz = Math.cos(lon) * Math.cos(c.lat); if (cz < -0.1) continue;
+        cx.beginPath(); cx.ellipse(ex + R * Math.sin(lon) * Math.cos(c.lat), ey - R * Math.sin(c.lat), R * c.r * Math.max(0.25, cz), R * c.r, 0, 0, 6.2832); cx.fill();
+      }
+    };
+    pintar(continentes, '#7c9a5e', rot); pintar(nubes, '#e9e6dc', rot * 1.4);
+    cx.fillStyle = 'rgba(20,25,55,0.38)'; cx.beginPath();
+    cx.arc(ex, ey, R, 0, 6.2832); cx.arc(ex - R * 0.32, ey - R * 0.08, R * 1.02, 0, 6.2832, true); cx.fill('evenodd');
+    cx.restore();
+  }
+
+  function astronauta(xc, pies, t) {
+    const B = '#f2f0ea', S = '#cfcbc2', G = '#8d8a95';
+    cx.fillStyle = 'rgba(30,30,50,0.25)'; elipse(xc + 8 * u, pies + 2 * u, 26 * u, 4.5 * u); cx.fill();
+    cx.beginPath(); cx.roundRect(xc - 18 * u, pies - 70 * u, 36 * u, 28 * u, 5 * u); rellena(S);       // mochila
+    // piernas delgadas y largas
+    extremidad([xc - 7 * u, pies - 40 * u, xc - 8 * u, pies - 22 * u, xc - 9 * u, pies - 7 * u], 7, B);
+    extremidad([xc + 7 * u, pies - 40 * u, xc + 8 * u, pies - 22 * u, xc + 9 * u, pies - 7 * u], 7, B);
+    for (const l of [-1, 1]) { cx.beginPath(); cx.roundRect(xc + l * 11 * u - 8 * u, pies - 8 * u, 16 * u, 8 * u, [5 * u, 5 * u, 1.5 * u, 1.5 * u]); rellena(G); }
+    // brazos delgados
+    extremidad([xc - 13 * u, pies - 64 * u, xc - 24 * u, pies - 56 * u, xc - 22 * u, pies - 40 * u], 6, B);
+    circulo(xc - 22 * u, pies - 38 * u, 4.5 * u); rellena(G);
+    const saluda = !quieto && Math.floor(t / 2400) % 3 === 1, a = Math.sin(t / 140) * 6 * u;
+    const mano = saluda ? [xc + 30 * u + a, pies - 92 * u] : [xc + 22 * u, pies - 40 * u];
+    extremidad(saluda ? [xc + 13 * u, pies - 64 * u, xc + 30 * u, pies - 66 * u, mano[0], mano[1]] : [xc + 13 * u, pies - 64 * u, xc + 24 * u, pies - 56 * u, mano[0], mano[1]], 6, B);
+    circulo(mano[0], mano[1] - 2 * u, 4.5 * u); rellena(G);
+    // cuerpo: rectangulo redondeado alto
+    cx.beginPath(); cx.roundRect(xc - 14 * u, pies - 70 * u, 28 * u, 32 * u, 8 * u); rellena(B);
+    cx.beginPath(); cx.roundRect(xc - 6 * u, pies - 63 * u, 12 * u, 9 * u, 2 * u); rellena(S, 1.3);
+    cx.fillStyle = '#c95a4a'; circulo(xc - 2.5 * u, pies - 58.5 * u, 1.8 * u); cx.fill();
+    cx.fillStyle = '#5a86c9'; circulo(xc + 2.5 * u, pies - 58.5 * u, 1.8 * u); cx.fill();
+    // casco con visor oscuro y reflejos
+    const hy = pies - 90 * u;
+    circulo(xc, hy, 22 * u); rellena(B);
+    elipse(xc, hy + 1 * u, 16 * u, 13 * u); rellena('#3a4a6a', 1.4);
+    cx.fillStyle = 'rgba(255,255,255,0.45)'; cx.beginPath(); cx.ellipse(xc - 8 * u, hy - 4 * u, 2.6 * u, 5 * u, 0.6, 0, 6.2832); cx.fill();
+    cx.beginPath(); cx.arc(xc - 2 * u, hy - 8 * u, 1.4 * u, 0, 6.2832); cx.fill();   // reflejos del visor
+  }
+
+  function dibujar(t) {
+    if (document.getElementById('entrada').classList.contains('activa') && t - ultimo > 33) {
+      ultimo = t;
+      // el cielo queda debajo de la Tierra; el suelo encima: se pinta el fondo en dos partes
+      cx.drawImage(fondo, 0, 0);
+      for (const e of estrellas) {
+        const a = quieto ? 1 : 0.55 + 0.45 * Math.sin(e.f + t / 650);
+        cx.globalAlpha = a; cx.fillStyle = '#f3ecd2';
+        const r = 2.4 * u; cx.fillRect(e.x - r, e.y - 0.5 * u, 2 * r, u); cx.fillRect(e.x - 0.5 * u, e.y - r, u, 2 * r);
+      }
+      cx.globalAlpha = 1;
+      const R = H * 0.3, ex = W * 0.5, ey = suelo - R * 0.6;
+      tierra(quieto ? 0 : t / 6000, ex, ey, R);
+      // vuelve a pintar el suelo encima de la Tierra
+      cx.drawImage(piso, 0, 0);
+      astronauta(W * 0.5, suelo + 30 * u, t);
+    }
+    requestAnimationFrame(dibujar);
+  }
+  let espera; addEventListener('resize', () => { clearTimeout(espera); espera = setTimeout(preparar, 200); });
+  preparar(); requestAnimationFrame(dibujar);
+})();
+
+// Arranque: llenar el selector de idioma y aplicar el idioma elegido
+(function () {
+  const sel = document.getElementById('idioma');
+  sel.innerHTML = Object.entries(IDIOMAS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+  sel.value = idioma;
+  document.getElementById('botones-idioma').innerHTML = Object.entries(IDIOMAS)
+    .map(([k, v]) => `<button data-l="${k}" lang="${k}" onclick="cambiarIdioma('${k}')">${v}</button>`).join('');
+  aplicarIdioma();
+})();
+</script>
+</body>
+</html>
