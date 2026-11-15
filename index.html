@@ -332,6 +332,15 @@
     .vista.activa, #sala.sale-izq, #sala.sale-der, #sala.entra-der, #sala.entra-izq { animation:none; }
     #aladin { transition:none; } .anillo { animation:none; }
   }
+
+  /* ---- Laboratorio (herramienta en vivo dentro del sitio) ---- */
+  #laboratorio { padding:70px 20px 20px; }
+  .lab-cabeza { max-width:1200px; margin:0 auto 12px; display:flex; gap:16px; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; }
+  .lab-cabeza h2 { margin:0 0 6px; font:600 clamp(22px,3vw,32px) 'Fredoka', sans-serif; color:#f3efe6; -webkit-text-stroke:1.5px var(--tinta); paint-order:stroke fill; }
+  .lab-cabeza p { margin:0; max-width:760px; color:var(--suave); font-size:15px; line-height:1.5; }
+  .lab-marco { max-width:1200px; margin:0 auto; height:calc(100vh - 220px); min-height:520px; background:#fff;
+    border:2px solid var(--tinta); border-radius:12px; overflow:hidden; box-shadow:4px 4px 0 rgba(0,0,0,.35); }
+  .lab-marco iframe { width:100%; height:100%; border:0; display:block; }
 </style>
 
 </head>
@@ -344,6 +353,7 @@
     <button data-vista="entrada" data-t="nav_inicio">Inicio</button>
     <button data-vista="planetario" data-t="nav_planetario">Planetario</button>
     <button data-vista="museo" data-t="nav_museo">Museo</button>
+    <button data-vista="laboratorio" data-t="nav_lab">Laboratorio</button>
     <button id="btn-sonido" onclick="sonido()" style="display:none">Sonido: apagado</button>
     <select id="idioma" aria-label="Idioma / Language" onchange="cambiarIdioma(this.value)"></select>
   </nav>
@@ -387,6 +397,14 @@
 </section>
 
 <!-- MUSEO -->
+<section id="laboratorio" class="vista">
+  <div class="lab-cabeza">
+    <div><h2 data-t="lab_titulo">Laboratorio: busca tú con SPHEREx</h2><p data-t="lab_texto"></p></div>
+    <a class="btn" id="lab-nueva" target="_blank" data-t="lab_nueva">Abrir en otra pestaña</a>
+  </div>
+  <div class="lab-marco"><iframe id="lab-frame" title="Planet X con SPHEREx" allow="fullscreen"></iframe></div>
+</section>
+
 <section id="museo" class="vista">
   <div id="sala" class="sala"></div>
   <div class="navsala">
@@ -450,6 +468,10 @@ const IDIOMAS = { es:'Español', en:'English', fr:'Français', pt:'Português', 
 const T = {
   nav_inicio:{es:'Inicio',en:'Home',fr:'Accueil',pt:'Início',de:'Start',ko:'처음',zh:'首页',th:'หน้าแรก',ar:'الرئيسية',ja:'ホーム'},
   nav_planetario:{es:'Planetario',en:'Planetarium',fr:'Planétarium',pt:'Planetário',de:'Planetarium',ko:'천체투영관',zh:'天象馆',th:'ท้องฟ้าจำลอง',ar:'القبة السماوية',ja:'プラネタリウム'},
+  nav_lab:{es:'Laboratorio',en:'Lab',fr:'Laboratoire',pt:'Laboratório',de:'Labor',ko:'실험실',zh:'实验室',th:'ห้องทดลอง',ar:'المختبر',ja:'ラボ'},
+  lab_titulo:{es:'Laboratorio: busca tú con SPHEREx',en:'Lab: search with SPHEREx yourself',fr:'Laboratoire : cherche toi-même avec SPHEREx',pt:'Laboratório: pesquise você mesmo com o SPHEREx',de:'Labor: Suche selbst mit SPHEREx',ko:'실험실: SPHEREx로 직접 찾아보기',zh:'实验室：用 SPHEREx 亲自搜索',th:'ห้องทดลอง: ค้นหาด้วย SPHEREx ด้วยตัวเอง',ar:'المختبر: ابحث بنفسك مع SPHEREx',ja:'ラボ：SPHERExで自分でさがそう'},
+  lab_texto:{es:'Elige un objeto o escribe unas coordenadas: la herramienta descarga en ese momento las fotos reales de SPHEREx desde la NASA y arma el video (tarda de 1 a 4 minutos). La herramienta está en español.',en:'Pick an object or type coordinates: the tool downloads real SPHEREx images from NASA right now and builds the video (it takes 1 to 4 minutes). The tool is in Spanish.',fr:"Choisis un objet ou saisis des coordonnées : l'outil télécharge en direct les vraies images SPHEREx de la NASA et crée la vidéo (1 à 4 minutes). L'outil est en espagnol.",pt:'Escolha um objeto ou digite coordenadas: a ferramenta baixa na hora as imagens reais do SPHEREx da NASA e monta o vídeo (leva de 1 a 4 minutos). A ferramenta está em espanhol.',de:'Wähle ein Objekt oder gib Koordinaten ein: Das Werkzeug lädt sofort echte SPHEREx-Bilder von der NASA und erstellt das Video (1 bis 4 Minuten). Das Werkzeug ist auf Spanisch.',ko:'천체를 고르거나 좌표를 입력하세요. 도구가 NASA에서 실제 SPHEREx 사진을 바로 내려받아 영상을 만들어요(1~4분). 도구는 스페인어로 되어 있어요.',zh:'选择一个天体或输入坐标：工具会立即从 NASA 下载真实的 SPHEREx 照片并生成视频（需要 1 到 4 分钟）。工具界面为西班牙语。',th:'เลือกวัตถุหรือพิมพ์พิกัด เครื่องมือจะดาวน์โหลดภาพจริงของ SPHEREx จาก NASA ทันทีและสร้างวิดีโอ (ใช้เวลา 1 ถึง 4 นาที) เครื่องมือเป็นภาษาสเปน',ar:'اختر جرمًا أو اكتب إحداثيات: تنزّل الأداة صور SPHEREx الحقيقية من ناسا فورًا وتصنع الفيديو (يستغرق من 1 إلى 4 دقائق). الأداة باللغة الإسبانية.',ja:'天体を選ぶか座標を入力すると、ツールがNASAから本物のSPHEREx画像をその場でダウンロードして動画をつくります（1〜4分）。ツールはスペイン語です。'},
+  lab_nueva:{es:'Abrir en otra pestaña',en:'Open in a new tab',fr:'Ouvrir dans un nouvel onglet',pt:'Abrir em outra aba',de:'In neuem Tab öffnen',ko:'새 탭에서 열기',zh:'在新标签页打开',th:'เปิดในแท็บใหม่',ar:'افتح في علامة تبويب جديدة',ja:'新しいタブで開く'},
   nav_museo:{es:'Museo',en:'Museum',fr:'Musée',pt:'Museu',de:'Museum',ko:'박물관',zh:'博物馆',th:'พิพิธภัณฑ์',ar:'المتحف',ja:'博物館'},
   h1:{es:'El cielo en movimiento',en:'The sky in motion',fr:'Le ciel en mouvement',pt:'O céu em movimento',de:'Der Himmel in Bewegung',ko:'움직이는 하늘',zh:'运动中的天空',th:'ท้องฟ้าที่เคลื่อนไหว',ar:'السماء في حركة',ja:'動く夜空'},
   intro:{es:'Las estrellas parecen quietas, pero no lo están. Con las imágenes del telescopio espacial SPHEREx de la NASA, recorre un museo de objetos que se mueven y cambian de brillo, o párate en el centro del cielo y mira a tu alrededor.',
@@ -723,6 +745,7 @@ function mostrarVista(vista, sala) {
   document.querySelectorAll('nav button').forEach(b => b.classList.toggle('activo', b.dataset.vista === vista));
   if (vista === 'planetario') iniciarPlanetario();
   if (vista === 'museo') mostrarSala(sala === undefined ? salaActual : sala);
+  if (vista === 'laboratorio') { const f = document.getElementById('lab-frame'); if (!f.src) { f.src = HERRAMIENTA + '/?embed=true'; document.getElementById('lab-nueva').href = HERRAMIENTA; } }
   window.scrollTo(0, 0);
 }
 document.querySelectorAll('nav button').forEach(b => b.onclick = () => irA(b.dataset.vista));
@@ -730,6 +753,14 @@ document.querySelectorAll('nav button').forEach(b => b.onclick = () => irA(b.dat
 // ---------------------------------------------------------------------------
 // Museo
 // ---------------------------------------------------------------------------
+// Laboratorio: la herramienta en vivo (Streamlit) dentro del sitio
+function abrirLab(coord) {
+  const q = coord ? '&coord=' + coord + '&fov=3' : '';
+  const f = document.getElementById('lab-frame'), url = HERRAMIENTA + '/?embed=true' + q;
+  if (coord || !f.src) f.src = url;
+  document.getElementById('lab-nueva').href = HERRAMIENTA + (coord ? '/?coord=' + coord + '&fov=3' : '');
+  irA('laboratorio');
+}
 function ligaHerramienta(s) {
   return HERRAMIENTA + "/?coord=" + encodeURIComponent(s.clave) + "&fov=3";
 }
@@ -775,9 +806,9 @@ function mostrarSala(i) {
       <span class="marco-puerta"><span class="flecha">${lado === 'izq' ? '‹' : '›'}</span></span>
       <small>${t('sala', { n: k + 1, t: n })}</small></button>`;
   const acciones = `${s.clave ? `<button class="btn" onclick="verEnPlanetario(${salaActual})">${t('ver_en_plan')}</button>
-      <a class="btn" href="${ligaHerramienta(s)}" target="_blank">${t('explorar')}</a>` : ''}
+      <button class="btn" onclick="abrirLab('${encodeURIComponent(s.clave)}')">${t('explorar')}</button>` : ''}
       ${s.final ? `<button class="btn principal" onclick="irA('planetario')">${t('ir_plan')}</button>
-      <a class="btn principal" href="${HERRAMIENTA}" target="_blank">${t('abrir_herr')}</a>` : ''}`;
+      <button class="btn principal" onclick="abrirLab()">${t('abrir_herr')}</button>` : ''}`;
   let h = `<div class="salon" style="--pared:${PAREDES[salaActual % PAREDES.length]}">
     <div class="pared">
       <div class="lampara l1"></div><div class="lampara l2"></div><div class="luz"></div>
